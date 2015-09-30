@@ -3,6 +3,8 @@ using System.Collections;
 
 public class HexMath {
 
+	#region Enums
+
 	public enum EdgeDimension
 	{
 		EdgeWidth,
@@ -15,11 +17,15 @@ public class HexMath {
 		PointRadius,
 	}
 
-	public enum LayoutType
+	public enum GridLayout
 	{
 		PointyTop,
 		FlatTop
 	}
+
+	#endregion
+
+	#region Static Functions
 
 	/// <summary>
 	/// Returns the distance from a corner to the center of a hexagon.
@@ -33,15 +39,10 @@ public class HexMath {
 	{
 		float edgeRadius = dimension;
 
-		switch ( dimensionType )
-		{
-			case EdgeDimension.EdgeWidth:
-				edgeRadius  = dimension * .5f;
-				break;
-			case EdgeDimension.EdgeRadius:
-				edgeRadius = dimension;
-				break;
-		}
+		if ( dimensionType == EdgeDimension.EdgeWidth )
+			edgeRadius = dimension * .5f;
+		else
+			edgeRadius = dimension;
 
 		return (2 * edgeRadius) / Mathf.Sqrt(3);
 	}
@@ -58,15 +59,10 @@ public class HexMath {
 	{
 		float edgeRadius = dimension;
 
-		switch ( dimensionType )
-		{
-			case EdgeDimension.EdgeWidth:
+		if ( dimensionType == EdgeDimension.EdgeWidth)
 				edgeRadius  = dimension * .5f;
-				break;
-			case EdgeDimension.EdgeRadius:
+		else
 				edgeRadius = dimension;
-				break;
-		}
 
 		return (4 * edgeRadius) / Mathf.Sqrt(3);
 	}
@@ -83,15 +79,10 @@ public class HexMath {
 	{
 		float pointRadius = dimension;
 
-		switch ( dimensionType )
-		{
-			case PointDimension.PointWidth:
+		if ( dimensionType == PointDimension.PointWidth)
 				pointRadius  = dimension * .5f;
-				break;
-			case PointDimension.PointRadius:
+		else
 				pointRadius = dimension;
-				break;
-		}
 
 		return (pointRadius * Mathf.Sqrt( 3 )) / 2;
 	}
@@ -108,26 +99,29 @@ public class HexMath {
 	{
 		float pointRadius = dimension;
 
-		switch ( dimensionType )
-		{
-			case PointDimension.PointWidth:
+		if ( dimensionType == PointDimension.PointWidth)
 				pointRadius  = dimension * .5f;
-				break;
-			case PointDimension.PointRadius:
+		else
 				pointRadius = dimension;
-				break;
+
+		return 2 * ((pointRadius * Mathf.Sqrt(3)) / 2);
+	}
+
+	public static float CenterToInternalEdge(float pointWidth)
+	{
+		return pointWidth * .25f;
+	}
+
+	public static Vector2 GetCoordinates (Vector2 point, Vector2 origin, GridLayout layoutType, float edgeToEdgeWidth)
+	{
+		Vector2 coordinates = Vector2.zero;
+
+		if ( layoutType == GridLayout.PointyTop )
+		{
+			int column = Mathf.FloorToInt((point.x - origin.x) / edgeToEdgeWidth);
 		}
-
-		return 2 * ((pointRadius * Mathf.Sqrt( 3 )) / 2);
 	}
 
-	public static int GetRow(float xPoint, Vector3 originPosition, LayoutType layoutType, float edgeToEdgeWidth )
-	{
-		
-	}
 
-	public static int GetColumn()
-	{
-
-	}
+	#endregion
 }
