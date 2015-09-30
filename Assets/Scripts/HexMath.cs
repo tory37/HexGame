@@ -107,9 +107,35 @@ public class HexMath {
 		return 2 * ((pointRadius * Mathf.Sqrt(3)) / 2);
 	}
 
-	public static float CenterToInternalEdge(float pointWidth)
+	public static float CenterToInternalEdge(float pointToPointWidth)
 	{
-		return pointWidth * .25f;
+		return pointToPointWidth * .25f;
+	}
+
+	public static Vector2 WorldPosition(Vector2 coordinate, Vector2 origin, float edgeToEdgeWidth, GridLayout layoutType)
+	{
+		float pointRadius = PointToCenterRadius(edgeToEdgeWidth, EdgeDimension.EdgeWidth);
+		float innerSquareRadius = CenterToInternalEdge(pointRadius * 2);
+
+		float x  = 0;
+		float y = 0;
+
+		if ( layoutType == GridLayout.FlatTop )
+		{
+			x = (coordinate.x * (pointRadius + innerSquareRadius)) + origin.x;
+
+			y = (coordinate.y * edgeToEdgeWidth * .5f) + origin.y;
+		}
+		else if (layoutType == GridLayout.PointyTop)
+		{
+			x = (edgeToEdgeWidth * coordinate.x) + origin.x;
+			if (coordinate.x % 2 == 1)
+				x += (edgeToEdgeWidth * .5f);
+
+			y = (coordinate.y * (pointRadius + innerSquareRadius)) + origin.y;
+		}
+
+		return new Vector2( x, y );
 	}
 
 	public static Vector2 GetCoordinates (Vector2 point, Vector2 origin, GridLayout layoutType, float edgeToEdgeWidth)
@@ -118,10 +144,48 @@ public class HexMath {
 
 		if ( layoutType == GridLayout.PointyTop )
 		{
-			int column = Mathf.FloorToInt((point.x - origin.x) / edgeToEdgeWidth);
+			return GetPointyTopCoordinates( point, origin, layoutType, edgeToEdgeWidth );
 		}
 	}
 
+	public static Vector2 GetPointyTopCoordinates(Vector2 point, Vector2 origin, GridLayout layoutType, float edgeToEdgeWidth)
+	{
+		float edgeRadius = edgeToEdgeWidth * .5f;
+		float pointRadius = PointToCenterRadius( edgeToEdgeWidth, EdgeDimension.EdgeWidth );
+		float interalRadius = CenterToInternalEdge( PointToPointWidth( edgeToEdgeWidth, EdgeDimension.EdgeWidth ) );
+
+		int column = Mathf.FloorToInt( (point.x - origin.x) / edgeToEdgeWidth );
+
+		Vector2 predictedHexPos = WorldPosition( new Vector2( column, row ), origin, edgeToEdgeWidth, GridLayout.PointyTop );
+
+
+
+		// right side of hex
+		if ( point.x > predictedHexPos.x && point.x < predictedHexPos.x + edgeRadius )
+		{
+			// The point is higher than the edge, might be above slope in top right cell
+			if ( point.y > predictedHexPos.y + interalRadius )
+			{
+				float yOnSlope = (-1 * point.x) + pointRadius;
+
+				//The point is above the slope, so we are a row higher than predicted
+				if ( point.y > yOnSlope )
+				{
+					row++;
+				}
+			}
+			else if ( point.y < predictedHexPos.y - interalRadius )
+			{
+				float yOnSlope = (1 * point.x) - pointRadius;
+
+				if ( point.y < yOnSlope )
+				{
+					row--;
+					column++;
+				}
+			}
+		}
+	}
 
 	#endregion
 }
