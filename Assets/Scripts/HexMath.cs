@@ -15,6 +15,12 @@ public class HexMath {
 		PointRadius,
 	}
 
+	public enum LayoutType
+	{
+		PointyTop,
+		FlatTop
+	}
+
 	/// <summary>
 	/// Returns the distance from a corner to the center of a hexagon.
 	/// </summary>
@@ -115,5 +121,13 @@ public class HexMath {
 		return 2 * ((pointRadius * Mathf.Sqrt( 3 )) / 2);
 	}
 
-	
+	public static int GetRow(float xPoint, Vector3 originPosition, LayoutType layoutType, float edgeToEdgeWidth )
+	{
+		
+	}
+
+	public static int GetColumn()
+	{
+
+	}
 }
