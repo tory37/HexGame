@@ -8,24 +8,30 @@ public class LevelLoaderInspector : Editor
 {
 	public override void OnInspectorGUI()
 	{
-		base.OnInspectorGUI();
-
 		LevelLoader ll = (LevelLoader)target;
 
-		ll.TileContainer = EditorGUILayout.ObjectField(ll.TileContainer, typeof(GameObject)) as GameObject;
+		ll.TileContainer = EditorGUILayout.ObjectField("Tile Container", ll.TileContainer, typeof(GameObject), true) as GameObject;
 
-		string fileName = EditorGUILayout.TextField(ll.FileName);
+		ll.FileName = EditorGUILayout.TextField("File Name", ll.FileName);
 
-		ll.TilePointRadius = EditorGUILayout.FloatField(ll.TilePointRadius);
+		ll.TilePointRadius = EditorGUILayout.FloatField("Tile Point Radius", ll.TilePointRadius);
 
-		ll.TileHeight = EditorGUILayout.FloatField(ll.TileHeight);
+        ll.NumberRows = EditorGUILayout.IntField("Number of Rows", ll.NumberRows);
 
-		ll.Offset = (HexMath.OffsetType)EditorGUILayout.EnumPopup(ll.Offset);
+		ll.TileHeight = EditorGUILayout.FloatField("Tile Height", ll.TileHeight);
+
+		ll.Offset = (HexMath.OffsetType)EditorGUILayout.EnumPopup("Offset Type", ll.Offset);
+
+        EditorGUILayout.BeginHorizontal();
 
 		if (GUILayout.Button("Load Level"))
 		{
-			LevelLoader.LoadLevelTiles(LevelLoader.GetLevelData(fileName));
+			ll.LoadLevelTiles(ll.GetLevelData(ll.FileName));
 		}
+
+        ll.GoFromBottom = EditorGUILayout.Toggle("Go From Bottom", ll.GoFromBottom);
+
+        EditorGUILayout.EndHorizontal();
 
 		if (GUILayout.Button("Add Tile Alias"))
 		{
@@ -35,20 +41,27 @@ public class LevelLoaderInspector : Editor
 
 		EditorGUI.indentLevel++;
 
-		for (int i = 0; i < ll.TileAlias.Count; i++)
+		ll.isTileMapExpanded = EditorGUILayout.Foldout(ll.isTileMapExpanded, "Tile Alias");
+
+		if (ll.isTileMapExpanded)
 		{
-			EditorGUILayout.BeginHorizontal();
+            ll.EmptyAlias = EditorGUILayout.TextField(ll.EmptyAlias, "Empty Alias");
 
-			if (GUILayout.Button("X"))
+			for (int i = 0; i < ll.TileAlias.Count; i++)
 			{
-				ll.TileAlias.RemoveAt(i);
-				ll.TilePrefabs.RemoveAt(i);
+				EditorGUILayout.BeginHorizontal();
+
+				if (GUILayout.Button("X"))
+				{
+					ll.TileAlias.RemoveAt(i);
+					ll.TilePrefabs.RemoveAt(i);
+				}
+
+				ll.TileAlias[i] = EditorGUILayout.TextField(ll.TileAlias[i]);
+				ll.TilePrefabs[i] = EditorGUILayout.ObjectField(ll.TilePrefabs[i], typeof(Tile), false) as Tile;
+
+				EditorGUILayout.EndHorizontal();
 			}
-
-			ll.TileAlias[i] = EditorGUILayout.TextField(ll.TileAlias[i]);
-			ll.TilePrefabs[i] = EditorGUILayout.ObjectField(ll.TilePrefabs[i], typeof(Tile)) as Tile;
-
-			EditorGUILayout.EndHorizontal();
 		}
 
 		EditorGUI.indentLevel--;

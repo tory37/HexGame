@@ -37,6 +37,26 @@ public class LevelLoader : MonoBehaviour {
 	}
 	[SerializeField] private float tilePointRadius;
 
+    public int NumberRows
+    {
+        get { return numberRows; }
+        #if UNITY_EDITOR
+        set { numberRows = value; }
+        #endif
+    }
+    [SerializeField]
+    private int numberRows;
+
+    public bool GoFromBottom
+    {
+        get { return goFromBottom; }
+        #if UNITY_EDITOR
+        set { goFromBottom = value; }
+        #endif
+    }
+    [SerializeField]
+    private bool goFromBottom;
+
 	public float TileHeight
 	{
 		get { return tileHeight; }
@@ -55,6 +75,18 @@ public class LevelLoader : MonoBehaviour {
 	}
 	[SerializeField] private string fileName;
 
+	public bool isTileMapExpanded;
+
+    public string EmptyAlias
+    {
+        get { return emptyAlias; }
+        #if UNITY_EDITOR
+        set { emptyAlias = value; }
+        #endif
+    }
+    [SerializeField]
+    private string emptyAlias;
+
 	public List<string> TileAlias
 	{
 		get { return tileAlias; }
@@ -62,7 +94,7 @@ public class LevelLoader : MonoBehaviour {
 		set { tileAlias = value; }
 		#endif
 	}
-	[SerializeField] private List<string> tileAlias;
+	[SerializeField] private List<string> tileAlias = new List<string>();
 
 	public List<Tile> TilePrefabs
 	{
@@ -71,7 +103,7 @@ public class LevelLoader : MonoBehaviour {
 		set { tilePrefabs = value; }
 		#endif
 	}
-	[SerializeField] private List<Tile> tilePrefabs;
+	[SerializeField] private List<Tile> tilePrefabs = new List<Tile>();
 
 	#endregion
 
@@ -87,66 +119,123 @@ public class LevelLoader : MonoBehaviour {
 	/// </summary>
 	/// <param name="fileName"></param>
 	/// <returns></returns>
-	public static Dictionary<Vector3, string> GetLevelData(string fileName)
+	public Dictionary<Vector3, string> GetLevelData(string fileName)
 	{
-		Dictionary<Vector3, string> tiles = new Dictionary<Vector3,string>();
-		try
-		{
-			int row = 0;
-			int col = 0;
-			int height = 0;
+        Dictionary<Vector3, string> tiles = new Dictionary<Vector3, string>();
 
-			string line;
+        if (goFromBottom)
+        {
+            try
+            {
+                int row = numberRows - 1;
+                int col = 0;
+                int height = 0;
 
-			StreamReader file = new StreamReader("Assets/Resources/" + fileName + ".dat");
+                string line;
 
-			while ((line = file.ReadLine()) != null)
-			{
-				string[] lineEntries = line.Split(' ');
+                StreamReader file = new StreamReader("Assets/Resources/" + fileName + ".dat");
 
-				if (lineEntries[0] == "Level:")
-				{
-					height = int.Parse(lineEntries[1]);
-					row = 0;
-					col = 0;
-					continue;
-				}
+                while ((line = file.ReadLine()) != null)
+                {
+                    string[] lineEntries = line.Split(' ');
 
-				foreach (string entry in lineEntries)
-				{
-					tiles.Add(new Vector3(row, col, height), entry);
-					col++;
-				}
+                    if (lineEntries[0] == "Level:")
+                    {
+                        height = int.Parse(lineEntries[1]);
+                        row = numberRows - 1;
+                        continue;
+                    }
 
-				row++;
-			}
-		}
-		catch (Exception e)
-		{
-			Debug.Log("Error: " + e.Message);
-		}
+                    col = 0;
 
-		return tiles;
+                    foreach (string entry in lineEntries)
+                    {
+                        tiles.Add(new Vector3(col, row, height), entry);
+                        col++;
+                    }
+
+                    row--;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Error: " + e.Message);
+            }
+
+            return tiles;
+        }
+
+        else
+        {
+            try
+            {
+                int row = 0;
+                int col = 0;
+                int height = 0;
+
+                string line;
+
+                StreamReader file = new StreamReader("Assets/Resources/" + fileName + ".dat");
+
+                while ((line = file.ReadLine()) != null)
+                {
+                    string[] lineEntries = line.Split(' ');
+
+                    if (lineEntries[0] == "Level:")
+                    {
+                        height = int.Parse(lineEntries[1]);
+                        row = 0;
+                        continue;
+                    }
+
+                    col = 0;
+
+                    foreach (string entry in lineEntries)
+                    {
+                        tiles.Add(new Vector3(col, row, height), entry);
+                        col++;
+                    }
+
+                    row++;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Error: " + e.Message);
+            }
+
+            return tiles;
+        }
 	}
 
-	public static void LoadLevelTiles(Dictionary<Vector3, string> tiles)
+	public void LoadLevelTiles(Dictionary<Vector3, string> tiles)
 	{
-		Destroy(Instance.TileContainer);
-		Instance.TileContainer = GameObject.Instantiate(new GameObject(), Vector3.zero, Quaternion.identity) as GameObject;
+		DestroyImmediate(tileContainer);
+		tileContainer = GameObject.Instantiate(new GameObject("Tile Container"), Vector3.zero, Quaternion.identity) as GameObject;
+		tileContainer.transform.parent = transform;
 
 		Dictionary<string, Tile> tileMap = new Dictionary<string,Tile>();
 
-		for(int i = 0; i < Instance.tileAlias.Count; i++)
+		for(int i = 0; i < tileAlias.Count; i++)
 		{
-			tileMap.Add(Instance.tileAlias[i], Instance.TilePrefabs[i]);
+			tileMap.Add(tileAlias[i], tilePrefabs[i]);
 		}
+
+        Quaternion rotation = Quaternion.identity;
+        if (offset == HexMath.OffsetType.EvenR || offset == HexMath.OffsetType.OddR)
+        {
+            rotation *= Quaternion.Euler(0f, 30f, 0f);
+        }
 
 		foreach (var item in tiles)
 		{
-			Vector2 position = HexMath.OffsetToWorld(new Vector2(item.Key.x, item.Key.y), Instance.TilePointRadius, Instance.Offset);
-			float height = item.Key.z * Instance.TileHeight;
-			Tile newTile = GameObject.Instantiate(tileMap[item.Value], new Vector3(position.x, height, position.y), Quaternion.identity) as Tile;
-			newTile.transform.parent = Instance.TileContainer.transform;
+            if (tileMap.ContainsKey(item.Value))
+            {
+                Vector2 position = HexMath.OffsetToWorld(new Vector2(item.Key.x, item.Key.y), tilePointRadius, offset);
+                float height = item.Key.z * tileHeight;
+                Tile newTile = GameObject.Instantiate(tileMap[item.Value], new Vector3(position.x, height, position.y), rotation) as Tile;
+                newTile.transform.parent = tileContainer.transform;
+            }
 		}
 	}
 

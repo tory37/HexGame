@@ -19,7 +19,7 @@ public class Testing : MonoBehaviour {
 
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
-			Dictionary<Vector3, string> tiles = LevelLoader.GetLevelData("testing");
+			Dictionary<Vector3, string> tiles = LevelLoader.Instance.GetLevelData("testing");
 			foreach (var tile in tiles)
 			{
 				Debug.Log(tile.Key + ": " + tile.Value);
