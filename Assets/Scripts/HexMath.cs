@@ -295,17 +295,14 @@ public class HexMath {
 
 	public static Vector2 OffsetRound(Vector2 point, float pointRadius, OffsetType type)
 	{
-		Axial axial = PointToAxial(point, pointRadius, type);
-		Debug.Log("Axial: " + axial);
-		Debug.Log("Cube: " + CubeRound(AxialToCube(axial)));
 		if (type == OffsetType.EvenQ)
-			return CubeToEvenQ(CubeRound(new Cube(axial.q, -axial.q - axial.r, axial.r)));
+			return HexMath.CubeToEvenQ(HexMath.CubeRound(HexMath.AxialToCube(HexMath.PointToAxial(new Vector2(point.x, point.y), .5f, type))));
 		else if (type == OffsetType.EvenR)
-			return CubeToEvenR(CubeRound(new Cube(axial.q, -axial.q - axial.r, axial.r)));
+			return HexMath.CubeToEvenR(HexMath.CubeRound(HexMath.AxialToCube(HexMath.PointToAxial(new Vector2(point.x, point.y), .5f, type))));
 		else if (type == OffsetType.OddQ)
-			return CubeToOddQ(CubeRound(new Cube(axial.q, -axial.q - axial.r, axial.r)));
-		else 
-			return CubeToOddR(CubeRound(new Cube(axial.q, -axial.q - axial.r, axial.r)));
+			return HexMath.CubeToOddQ(HexMath.CubeRound(HexMath.AxialToCube(HexMath.PointToAxial(new Vector2(point.x, point.y), .5f, type))));
+		else
+			return HexMath.CubeToOddR(HexMath.CubeRound(HexMath.AxialToCube(HexMath.PointToAxial(new Vector2(point.x, point.y), .5f, type))));
 	}
 
 	public static Cube CubeRound(Cube cubePoint)
@@ -353,7 +350,6 @@ public class HexMath {
 
 		return new Vector2( x, y );
 	}
-
 
 	#endregion
 
