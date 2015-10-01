@@ -272,7 +272,7 @@ public class HexMath {
 		return new Cube(axial.q, -axial.q - axial.r, axial.r);
 	}
 
-	public static Axial PointToAxial(Vector2 point, float pointRadius, OffsetType type)
+	public static Axial WorldToAxial(Vector2 point, float pointRadius, OffsetType type)
 	{
 		float q;
 		float r;
@@ -296,13 +296,13 @@ public class HexMath {
 	public static Vector2 OffsetRound(Vector2 point, float pointRadius, OffsetType type)
 	{
 		if (type == OffsetType.EvenQ)
-			return HexMath.CubeToEvenQ(HexMath.CubeRound(HexMath.AxialToCube(HexMath.PointToAxial(new Vector2(point.x, point.y), .5f, type))));
+			return HexMath.CubeToEvenQ(HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(new Vector2(point.x, point.y), .5f, type))));
 		else if (type == OffsetType.EvenR)
-			return HexMath.CubeToEvenR(HexMath.CubeRound(HexMath.AxialToCube(HexMath.PointToAxial(new Vector2(point.x, point.y), .5f, type))));
+			return HexMath.CubeToEvenR(HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(new Vector2(point.x, point.y), .5f, type))));
 		else if (type == OffsetType.OddQ)
-			return HexMath.CubeToOddQ(HexMath.CubeRound(HexMath.AxialToCube(HexMath.PointToAxial(new Vector2(point.x, point.y), .5f, type))));
+			return HexMath.CubeToOddQ(HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(new Vector2(point.x, point.y), .5f, type))));
 		else
-			return HexMath.CubeToOddR(HexMath.CubeRound(HexMath.AxialToCube(HexMath.PointToAxial(new Vector2(point.x, point.y), .5f, type))));
+			return HexMath.CubeToOddR(HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(new Vector2(point.x, point.y), .5f, type))));
 	}
 
 	public static Cube CubeRound(Cube cubePoint)
@@ -325,30 +325,34 @@ public class HexMath {
 		return new Cube(rx, ry, rz);
 	}
 
-	public static Vector2 WorldPosition(Vector2 coordinate, Vector2 origin, float edgeToEdgeWidth, GridLayout layoutType)
+	public static Vector2 OffsetToWorld(Vector2 offset, float pointRadius, OffsetType type)
 	{
-		float pointRadius = PointToCenterRadius(edgeToEdgeWidth, EdgeDimension.EdgeWidth);
-		float innerSquareRadius = CenterToInternalEdge(pointRadius * 2);
+		float x;
+		float y;
 
-		float x  = 0;
-		float y = 0;
-
-		if ( layoutType == GridLayout.FlatTop )
+		if (type == OffsetType.EvenQ)
 		{
-			x = (coordinate.x * (pointRadius + innerSquareRadius)) + origin.x;
-
-			y = (coordinate.y * edgeToEdgeWidth * .5f) + origin.y;
+			x = pointRadius * 3.0f / 2.0f * offset.x;
+			y = pointRadius * Mathf.Sqrt(3) * (offset.y - .5f * (offset.x % 2));
 		}
-		else if (layoutType == GridLayout.PointyTop)
+		else if (type == OffsetType.EvenR)
 		{
-			x = (edgeToEdgeWidth * coordinate.x) + origin.x;
-			if (coordinate.x % 2 == 1)
-				x += (edgeToEdgeWidth * .5f);
-
-			y = (coordinate.y * (pointRadius + innerSquareRadius)) + origin.y;
+			x = pointRadius * Mathf.Sqrt(3) * (offset.x - .5f * (offset.y % 2));
+			y = pointRadius * 3.0f / 2.0f * offset.y;
+		}
+		else if (type == OffsetType.OddQ)
+		{
+			x = pointRadius * 3.0f / 2.0f * offset.x;
+			y = pointRadius * Mathf.Sqrt(3) * (offset.y + .5f * (offset.x % 2));
+		}
+		//OddR
+		else
+		{
+			x = pointRadius * Mathf.Sqrt(3) * (offset.x + .5f * (offset.y % 2));
+			y = pointRadius * 3.0f / 2.0f * offset.y;
 		}
 
-		return new Vector2( x, y );
+		return new Vector2(x, y);
 	}
 
 	#endregion
@@ -362,58 +366,5 @@ public class HexMath {
 
 	#endregion
 
-	//#region Waste
 
-	//public static Vector2 GetCoordinates (Vector2 point, Vector2 origin, GridLayout layoutType, float edgeToEdgeWidth)
-	//{
-	//	Vector2 coordinates = Vector2.zero;
-
-	//	if ( layoutType == GridLayout.PointyTop )
-	//	{
-	//		return GetPointyTopCoordinates(point, origin, layoutType, edgeToEdgeWidth);
-	//	}
-	//	else
-	//		return Vector2.zero;
-	//}
-
-	//public static Vector2 GetPointyTopCoordinates(Vector2 point, Vector2 origin, GridLayout layoutType, float edgeToEdgeWidth)
-	//{
-	//	float edgeRadius = edgeToEdgeWidth * .5f;
-	//	float pointRadius = PointToCenterRadius( edgeToEdgeWidth, EdgeDimension.EdgeWidth );
-	//	float interalRadius = CenterToInternalEdge( PointToPointWidth( edgeToEdgeWidth, EdgeDimension.EdgeWidth ) );
-
-	//	int column = Mathf.FloorToInt( (point.x - origin.x) / edgeToEdgeWidth );
-
-	//	Vector2 predictedHexPos = WorldPosition( new Vector2( column, row ), origin, edgeToEdgeWidth, GridLayout.PointyTop );
-
-
-
-	//	// right side of hex
-	//	if ( point.x > predictedHexPos.x && point.x < predictedHexPos.x + edgeRadius )
-	//	{
-	//		// The point is higher than the edge, might be above slope in top right cell
-	//		if ( point.y > predictedHexPos.y + interalRadius )
-	//		{
-	//			float yOnSlope = (-1 * point.x) + pointRadius;
-
-	//			//The point is above the slope, so we are a row higher than predicted
-	//			if ( point.y > yOnSlope )
-	//			{
-	//				//row++;
-	//			}
-	//		}
-	//		else if ( point.y < predictedHexPos.y - interalRadius )
-	//		{
-	//			float yOnSlope = (1 * point.x) - pointRadius;
-
-	//			if ( point.y < yOnSlope )
-	//			{
-
-	//				column++;
-	//			}
-	//		}
-	//	}
-	//}
-
-	//#endregion
 }

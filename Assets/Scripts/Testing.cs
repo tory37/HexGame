@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Testing : MonoBehaviour {
 
@@ -13,6 +14,15 @@ public class Testing : MonoBehaviour {
 			if ( Physics.Raycast(ray, out hit) )
 			{
 				Debug.Log("Offset: " + HexMath.OffsetRound(new Vector2(hit.point.x, hit.point.z), .5f, HexMath.OffsetType.OddR));
+			}
+		}
+
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			Dictionary<Vector3, string> tiles = LevelLoader.GetLevelData("testing");
+			foreach (var tile in tiles)
+			{
+				Debug.Log(tile.Key + ": " + tile.Value);
 			}
 		}
 	}
