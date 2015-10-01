@@ -3,6 +3,60 @@ using System.Collections;
 
 public class HexMath {
 
+	/* 
+		This class is for use with hexagonal playfields.
+		Terms:
+		-- Column is Q
+		-- Row is R
+	*/
+
+	#region Helper Classes
+
+	public class Cube
+	{
+		public float x, y, z;
+
+		public Cube ()
+		{
+			x = y = z = 0;
+		}
+
+		public Cube (float x, float y, float z)
+		{
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+
+		public override string ToString()
+		{
+			return "(" + x + ", " + y + ", " + z + ")";
+		}
+	}
+
+	public class Axial
+	{
+		public float q, r;
+
+		public Axial ()
+		{
+			q = r = 0;
+		}
+
+		public Axial (float q, float r)
+		{
+			this.q = q;
+			this.r = r;
+		}
+
+		public override string ToString()
+		{
+			return "(" + q + ", " + r + ")";
+		}
+	}
+
+	#endregion
+
 	#region Enums
 
 	public enum EdgeDimension
@@ -23,9 +77,17 @@ public class HexMath {
 		FlatTop
 	}
 
+	public enum OffsetType
+	{
+		OddR,
+		EvenR,
+		OddQ,
+		EvenQ
+	}
+
 	#endregion
 
-	#region Static Functions
+	#region Dimensions
 
 	/// <summary>
 	/// Returns the distance from a corner to the center of a hexagon.
@@ -112,6 +174,160 @@ public class HexMath {
 		return pointToPointWidth * .25f;
 	}
 
+	#endregion
+
+	#region Conversions
+
+	public static Vector2 CubeToEvenQ(Cube cube)
+	{
+		Vector2 evenQ;
+
+		evenQ.x = cube.x;
+		evenQ.y = cube.z + (cube.x + (cube.x % 2)) / 2;
+
+		return evenQ;
+	}
+
+	public static Cube EvenQToCube(Vector2 evenQ)
+	{
+		Cube cube = new Cube();
+
+		cube.x = evenQ.x;
+		cube.z = evenQ.y - (evenQ.x + (evenQ.x % 2)) / 2;
+		cube.y = -cube.x - cube.z;
+
+		return cube;
+	}
+
+	public static Vector2 CubeToOddQ(Cube cube)
+	{
+		Vector2 oddQ;
+
+		oddQ.x = cube.x;
+		oddQ.y = cube.z + (cube.x - (cube.x % 2)) / 2;
+
+		return oddQ;
+	}
+
+	public static Cube OddQToCube(Vector2 oddQ)
+	{
+		Cube cube = new Cube();
+
+		cube.x = oddQ.x;
+		cube.z = oddQ.y - (oddQ.x - (oddQ.x % 2)) / 2;
+		cube.y = -cube.x - cube.z;
+
+		return cube;
+	}
+
+	public static Vector2 CubeToEvenR(Cube cube)
+	{
+		Vector2 evenR;
+
+		evenR.x = cube.x + (cube.z + (cube.z % 2)) / 2;
+		evenR.y = cube.z;
+
+		return evenR;
+	}
+
+	public static Cube EvenRToCube(Vector2 evenR)
+	{
+		Cube cube = new Cube();
+
+		cube.x = evenR.x - (evenR.y + (evenR.y % 2)) / 2;
+		cube.z = evenR.y;
+		cube.y = -cube.x - cube.z;
+
+		return cube;
+	}
+
+	public static Vector2 CubeToOddR(Cube cube)
+	{
+		Vector2 oddR;
+
+		oddR.x = cube.x + (cube.z - (cube.z % 2)) / 2;
+		oddR.y = cube.z;
+
+		return oddR;
+	}
+
+	public static Cube OddRToCube(Vector2 oddR)
+	{
+		Cube cube = new Cube();
+
+		cube.x = oddR.x - (oddR.y - (oddR.y % 2)) / 2;
+		cube.z = oddR.y;
+		cube.y = - cube.x - cube.z;
+
+		return cube;
+	}
+
+	public static Axial CubeToAxial(Cube cube)
+	{
+		return new Axial(cube.x, cube.z);
+	}
+
+	public static Cube AxialToCube(Axial axial)
+	{
+		return new Cube(axial.q, -axial.q - axial.r, axial.r);
+	}
+
+	public static Axial PointToAxial(Vector2 point, float pointRadius, OffsetType type)
+	{
+		float q;
+		float r;
+
+		// Pointy top
+		if ( type == OffsetType.EvenR || type == OffsetType.OddR )
+		{
+			q = ((point.x * (Mathf.Sqrt(3.0f) / 3.0f)) - (point.y / 3.0f)) / pointRadius;
+			r = point.y * 2.0f/3.0f / pointRadius;
+		}
+		// Flat top
+		else
+		{
+			q = point.x * 2.0f/3.0f / pointRadius;
+			r = (-point.x / 3.0f + Mathf.Sqrt(3.0f) / 3.0f * point.y) / pointRadius;
+		}
+
+		return new Axial(q, r);
+	}
+
+	public static Vector2 OffsetRound(Vector2 point, float pointRadius, OffsetType type)
+	{
+		Axial axial = PointToAxial(point, pointRadius, type);
+		Debug.Log("Axial: " + axial);
+		Debug.Log("Cube: " + CubeRound(AxialToCube(axial)));
+		if (type == OffsetType.EvenQ)
+			return CubeToEvenQ(CubeRound(new Cube(axial.q, -axial.q - axial.r, axial.r)));
+		else if (type == OffsetType.EvenR)
+			return CubeToEvenR(CubeRound(new Cube(axial.q, -axial.q - axial.r, axial.r)));
+		else if (type == OffsetType.OddQ)
+			return CubeToOddQ(CubeRound(new Cube(axial.q, -axial.q - axial.r, axial.r)));
+		else 
+			return CubeToOddR(CubeRound(new Cube(axial.q, -axial.q - axial.r, axial.r)));
+	}
+
+	public static Cube CubeRound(Cube cubePoint)
+	{
+		float rx = Mathf.Round(cubePoint.x);
+		float ry = Mathf.Round(cubePoint.y);
+		float rz = Mathf.Round(cubePoint.z);
+
+		float x_diff = Mathf.Abs(rx - cubePoint.x);
+		float y_diff = Mathf.Abs(ry - cubePoint.y);
+		float z_diff = Mathf.Abs(rz - cubePoint.z);
+
+		if ( x_diff > y_diff && x_diff > z_diff )
+			rx = -ry - rz;
+		else if ( y_diff > z_diff )
+			ry = -rx - rz;
+		else
+			rz = -rx - ry;
+
+		return new Cube(rx, ry, rz);
+	}
+
 	public static Vector2 WorldPosition(Vector2 coordinate, Vector2 origin, float edgeToEdgeWidth, GridLayout layoutType)
 	{
 		float pointRadius = PointToCenterRadius(edgeToEdgeWidth, EdgeDimension.EdgeWidth);
@@ -138,54 +354,70 @@ public class HexMath {
 		return new Vector2( x, y );
 	}
 
-	public static Vector2 GetCoordinates (Vector2 point, Vector2 origin, GridLayout layoutType, float edgeToEdgeWidth)
+
+	#endregion
+
+	#region Others
+
+	public static float CubeDistance(Cube a, Cube b)
 	{
-		Vector2 coordinates = Vector2.zero;
-
-		if ( layoutType == GridLayout.PointyTop )
-		{
-			return GetPointyTopCoordinates( point, origin, layoutType, edgeToEdgeWidth );
-		}
-	}
-
-	public static Vector2 GetPointyTopCoordinates(Vector2 point, Vector2 origin, GridLayout layoutType, float edgeToEdgeWidth)
-	{
-		float edgeRadius = edgeToEdgeWidth * .5f;
-		float pointRadius = PointToCenterRadius( edgeToEdgeWidth, EdgeDimension.EdgeWidth );
-		float interalRadius = CenterToInternalEdge( PointToPointWidth( edgeToEdgeWidth, EdgeDimension.EdgeWidth ) );
-
-		int column = Mathf.FloorToInt( (point.x - origin.x) / edgeToEdgeWidth );
-
-		Vector2 predictedHexPos = WorldPosition( new Vector2( column, row ), origin, edgeToEdgeWidth, GridLayout.PointyTop );
-
-
-
-		// right side of hex
-		if ( point.x > predictedHexPos.x && point.x < predictedHexPos.x + edgeRadius )
-		{
-			// The point is higher than the edge, might be above slope in top right cell
-			if ( point.y > predictedHexPos.y + interalRadius )
-			{
-				float yOnSlope = (-1 * point.x) + pointRadius;
-
-				//The point is above the slope, so we are a row higher than predicted
-				if ( point.y > yOnSlope )
-				{
-					row++;
-				}
-			}
-			else if ( point.y < predictedHexPos.y - interalRadius )
-			{
-				float yOnSlope = (1 * point.x) - pointRadius;
-
-				if ( point.y < yOnSlope )
-				{
-					row--;
-					column++;
-				}
-			}
-		}
+		return (Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) + Mathf.Abs(a.z - b.z)) / 2;
 	}
 
 	#endregion
+
+	//#region Waste
+
+	//public static Vector2 GetCoordinates (Vector2 point, Vector2 origin, GridLayout layoutType, float edgeToEdgeWidth)
+	//{
+	//	Vector2 coordinates = Vector2.zero;
+
+	//	if ( layoutType == GridLayout.PointyTop )
+	//	{
+	//		return GetPointyTopCoordinates(point, origin, layoutType, edgeToEdgeWidth);
+	//	}
+	//	else
+	//		return Vector2.zero;
+	//}
+
+	//public static Vector2 GetPointyTopCoordinates(Vector2 point, Vector2 origin, GridLayout layoutType, float edgeToEdgeWidth)
+	//{
+	//	float edgeRadius = edgeToEdgeWidth * .5f;
+	//	float pointRadius = PointToCenterRadius( edgeToEdgeWidth, EdgeDimension.EdgeWidth );
+	//	float interalRadius = CenterToInternalEdge( PointToPointWidth( edgeToEdgeWidth, EdgeDimension.EdgeWidth ) );
+
+	//	int column = Mathf.FloorToInt( (point.x - origin.x) / edgeToEdgeWidth );
+
+	//	Vector2 predictedHexPos = WorldPosition( new Vector2( column, row ), origin, edgeToEdgeWidth, GridLayout.PointyTop );
+
+
+
+	//	// right side of hex
+	//	if ( point.x > predictedHexPos.x && point.x < predictedHexPos.x + edgeRadius )
+	//	{
+	//		// The point is higher than the edge, might be above slope in top right cell
+	//		if ( point.y > predictedHexPos.y + interalRadius )
+	//		{
+	//			float yOnSlope = (-1 * point.x) + pointRadius;
+
+	//			//The point is above the slope, so we are a row higher than predicted
+	//			if ( point.y > yOnSlope )
+	//			{
+	//				//row++;
+	//			}
+	//		}
+	//		else if ( point.y < predictedHexPos.y - interalRadius )
+	//		{
+	//			float yOnSlope = (1 * point.x) - pointRadius;
+
+	//			if ( point.y < yOnSlope )
+	//			{
+
+	//				column++;
+	//			}
+	//		}
+	//	}
+	//}
+
+	//#endregion
 }
