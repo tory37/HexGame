@@ -210,9 +210,12 @@ public class LevelLoader : MonoBehaviour {
 
 	public void LoadLevelTiles(Dictionary<Vector3, string> tiles)
 	{
-		DestroyImmediate(tileContainer);
-		tileContainer = GameObject.Instantiate(new GameObject("Tile Container"), Vector3.zero, Quaternion.identity) as GameObject;
-		tileContainer.transform.parent = transform;
+		if (tileContainer != null )
+			DestroyImmediate(tileContainer);
+
+		tileContainer = new GameObject("Tile Container");
+		tileContainer.transform.position = Vector3.zero;
+		//tileContainer.transform.parent = transform;
 
 		Dictionary<string, Tile> tileMap = new Dictionary<string,Tile>();
 
