@@ -30,10 +30,7 @@ public class TileSelection : MonoBehaviour {
 
 	private void SetTileDictionary()
 	{
-		foreach (Tile tile in transform.GetComponentsInChildren<Tile>())
-		{
-			levelTiles.Add()
-		}
+		
 	}
 
 	private void ShowSelectionTile()
@@ -43,10 +40,10 @@ public class TileSelection : MonoBehaviour {
 
 		RaycastHit hit;
 
-		if (Physics.Raycast(ray, out hit, selectionDistance, selectionMask))
-		{
-			selectionTile
-		}
+		//if (Physics.Raycast(ray, out hit, selectionDistance, selectionMask))
+		//{
+		//	selectionTile
+		//}
 	}
 
 	

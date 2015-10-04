@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class HexMath {
 
@@ -14,14 +15,14 @@ public class HexMath {
 
 	public class Cube
 	{
-		public float x, y, z;
+		public int x, y, z;
 
 		public Cube ()
 		{
 			x = y = z = 0;
 		}
 
-		public Cube (float x, float y, float z)
+		public Cube (int x, int y, int z)
 		{
 			this.x = x;
 			this.y = y;
@@ -30,20 +31,42 @@ public class HexMath {
 
 		public override string ToString()
 		{
-			return "(" + x + ", " + y + ", " + z + ")";
+			return "Cube: (" + x + ", " + y + ", " + z + ")";
+		}
+	}
+
+	public class CubeFraction
+	{
+		public float x, y, z;
+
+		public CubeFraction ()
+		{
+			x = y = z = 0;
+		}
+
+		public CubeFraction (float x, float y, float z)
+		{
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+
+		public override string ToString()
+		{
+			return "Cube: (" + x + ", " + y + ", " + z + ")";
 		}
 	}
 
 	public class Axial
 	{
-		public float q, r;
+		public int q, r;
 
 		public Axial ()
 		{
 			q = r = 0;
 		}
 
-		public Axial (float q, float r)
+		public Axial (int q, int r)
 		{
 			this.q = q;
 			this.r = r;
@@ -51,7 +74,49 @@ public class HexMath {
 
 		public override string ToString()
 		{
-			return "(" + q + ", " + r + ")";
+			return "Axial: (" + q + ", " + r + ")";
+		}
+	}
+
+	public class AxialFraction
+	{
+		public float q, r;
+
+		public AxialFraction ()
+		{
+			q = r = 0;
+		}
+
+		public AxialFraction (float q, float r)
+		{
+			this.q = q;
+			this.r = r;
+		}
+
+		public override string ToString()
+		{
+			return "Axial: (" + q + ", " + r + ")";
+		}
+	}
+
+	public class Offset
+	{
+		public int x, y;
+
+		public Offset ()
+		{
+			x = y = 0;
+		}
+
+		public Offset(int x, int y)
+		{
+			this.x = x;
+			this.y = y;
+		}
+
+		public override string ToString()
+		{
+			return "Offset: (" + x + ", " + y + ")";  
 		}
 	}
 
@@ -178,9 +243,9 @@ public class HexMath {
 
 	#region Conversions
 
-	public static Vector2 CubeToEvenQ(Cube cube)
+	public static Offset CubeToEvenQ(Cube cube)
 	{
-		Vector2 evenQ;
+		Offset evenQ = new Offset();
 
 		evenQ.x = cube.x;
 		evenQ.y = cube.z + (cube.x + (cube.x % 2)) / 2;
@@ -188,7 +253,7 @@ public class HexMath {
 		return evenQ;
 	}
 
-	public static Cube EvenQToCube(Vector2 evenQ)
+	public static Cube EvenQToCube(Offset evenQ)
 	{
 		Cube cube = new Cube();
 
@@ -199,9 +264,9 @@ public class HexMath {
 		return cube;
 	}
 
-	public static Vector2 CubeToOddQ(Cube cube)
+	public static Offset CubeToOddQ(Cube cube)
 	{
-		Vector2 oddQ;
+		Offset oddQ = new Offset();
 
 		oddQ.x = cube.x;
 		oddQ.y = cube.z + (cube.x - (cube.x % 2)) / 2;
@@ -209,7 +274,7 @@ public class HexMath {
 		return oddQ;
 	}
 
-	public static Cube OddQToCube(Vector2 oddQ)
+	public static Cube OddQToCube(Offset oddQ)
 	{
 		Cube cube = new Cube();
 
@@ -220,9 +285,9 @@ public class HexMath {
 		return cube;
 	}
 
-	public static Vector2 CubeToEvenR(Cube cube)
+	public static Offset CubeToEvenR(Cube cube)
 	{
-		Vector2 evenR;
+		Offset evenR = new Offset();
 
 		evenR.x = cube.x + (cube.z + (cube.z % 2)) / 2;
 		evenR.y = cube.z;
@@ -230,7 +295,7 @@ public class HexMath {
 		return evenR;
 	}
 
-	public static Cube EvenRToCube(Vector2 evenR)
+	public static Cube EvenRToCube(Offset evenR)
 	{
 		Cube cube = new Cube();
 
@@ -241,9 +306,9 @@ public class HexMath {
 		return cube;
 	}
 
-	public static Vector2 CubeToOddR(Cube cube)
+	public static Offset CubeToOddR(Cube cube)
 	{
-		Vector2 oddR;
+		Offset oddR = new Offset();
 
 		oddR.x = cube.x + (cube.z - (cube.z % 2)) / 2;
 		oddR.y = cube.z;
@@ -251,7 +316,7 @@ public class HexMath {
 		return oddR;
 	}
 
-	public static Cube OddRToCube(Vector2 oddR)
+	public static Cube OddRToCube(Offset oddR)
 	{
 		Cube cube = new Cube();
 
@@ -267,12 +332,12 @@ public class HexMath {
 		return new Axial(cube.x, cube.z);
 	}
 
-	public static Cube AxialToCube(Axial axial)
+	public static CubeFraction AxialToCube(AxialFraction axial)
 	{
-		return new Cube(axial.q, -axial.q - axial.r, axial.r);
+		return new CubeFraction(axial.q, -axial.q - axial.r, axial.r);
 	}
 
-	public static Axial WorldToAxial(Vector2 point, float pointRadius, OffsetType type)
+	public static AxialFraction WorldToAxial(Vector2 point, float pointRadius, OffsetType type)
 	{
 		float q;
 		float r;
@@ -290,10 +355,10 @@ public class HexMath {
 			r = (-point.x / 3.0f + Mathf.Sqrt(3.0f) / 3.0f * point.y) / pointRadius;
 		}
 
-		return new Axial(q, r);
+		return new AxialFraction(q, r);
 	}
 
-	public static Vector2 OffsetRound(Vector2 point, float pointRadius, OffsetType type)
+	public static Offset OffsetRound(Vector2 point, float pointRadius, OffsetType type)
 	{
 		if (type == OffsetType.EvenQ)
 			return HexMath.CubeToEvenQ(HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(new Vector2(point.x, point.y), .5f, type))));
@@ -305,7 +370,7 @@ public class HexMath {
 			return HexMath.CubeToOddR(HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(new Vector2(point.x, point.y), .5f, type))));
 	}
 
-	public static Cube CubeRound(Cube cubePoint)
+	public static Cube CubeRound(CubeFraction cubePoint)
 	{
 		float rx = Mathf.Round(cubePoint.x);
 		float ry = Mathf.Round(cubePoint.y);
@@ -322,10 +387,10 @@ public class HexMath {
 		else
 			rz = -rx - ry;
 
-		return new Cube(rx, ry, rz);
+		return new Cube((int)rx, (int)ry, (int)rz);
 	}
 
-	public static Vector2 OffsetToWorld(Vector2 offset, float pointRadius, OffsetType type)
+	public static Vector2 OffsetToWorld(Offset offset, float pointRadius, OffsetType type)
 	{
 		float x;
 		float y;
@@ -359,9 +424,61 @@ public class HexMath {
 
 	#region Others
 
-	public static float CubeDistance(Cube a, Cube b)
+	/// <summary>
+	/// This function assumes your cube is a regular
+	/// cube, with integer values and not fractional values
+	/// </summary>
+	/// <param name="a"></param>
+	/// <param name="b"></param>
+	/// <returns>The number of hexes to get from a to b</returns>
+	public static int CubeDistance(Cube a, Cube b)
 	{
-		return (Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) + Mathf.Abs(a.z - b.z)) / 2;
+		return Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y), Mathf.Abs(a.z - b.z));
+	}
+
+	public static CubeFraction CubeLerp( Cube a, Cube b, float t )
+	{
+		CubeFraction af = new CubeFraction((float)a.x, (float)a.y, (float)a.z);
+		CubeFraction bf = new CubeFraction((float)b.x, (float)b.y, (float)b.z);
+
+		return new CubeFraction(af.x + (bf.x - af.x) * t,
+							 af.y + (bf.y - af.y) * t,
+							 af.z + (bf.z - af.z) * t);
+	}
+
+	public static List<Cube> GetHexInLine(Cube from, Cube to)
+	{
+		int distance = CubeDistance(from, to);
+
+		List<Cube> results = new List<Cube>();
+
+		for (int i = 0; i < distance; i++)
+		{
+			results.Add(CubeRound(CubeLerp(from, to, 1.0f / distance * (float)i)));
+		}
+
+		return results;
+	}
+
+	public static List<Cube> GetHexInRange(Cube center, int range)
+	{
+		List<Cube> results = new List<Cube>();
+
+		int leftX = center.x - range;
+		int rightX = center.x + range;
+		int underY = center.y - range;
+		int overY = center.y + range;
+
+		for (int dx = leftX; dx <= rightX; dx++ )
+		{
+			for (int dy = underY; dy <= overY; dy++ )
+			{
+				var dz = -dx-dy;
+				results.Add(new Cube(dx, dy, dz));
+			}
+		}
+
+		return results;
 	}
 
 	#endregion

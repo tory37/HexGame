@@ -234,7 +234,7 @@ public class LevelLoader : MonoBehaviour {
 		{
             if (tileMap.ContainsKey(item.Value))
             {
-                Vector2 position = HexMath.OffsetToWorld(new Vector2(item.Key.x, item.Key.y), tilePointRadius, offset);
+                Vector2 position = HexMath.OffsetToWorld(new HexMath.Offset((int)item.Key.x, (int)item.Key.y), tilePointRadius, offset);
                 float height = item.Key.z * tileHeight;
                 Tile newTile = GameObject.Instantiate(tileMap[item.Value], new Vector3(position.x, height, position.y), rotation) as Tile;
                 newTile.transform.parent = tileContainer.transform;
