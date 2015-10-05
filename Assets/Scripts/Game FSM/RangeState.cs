@@ -38,11 +38,7 @@ public class RangeState : IState
 
 		if (input != 0)
 		{
-			List<HexMath.Cube> inRangeCubes = HexMath.GetHexInRange(
-												HexMath.CubeRound
-													(HexMath.AxialToCube(
-														HexMath.WorldToAxial(
-															Camera.main.ScreenToWorldPoint(Input.mousePosition), .5f, HexMath.OffsetType.EvenQ))), input);
+			List<HexMath.Cube> inRangeCubes = HexMath.GetHexInRange(new HexMath.Cube(3, -1, -2), input);
 
 			GameObject.Destroy(gamefsm.lineContainer.gameObject);
 			gamefsm.lineContainer = new GameObject("Line Continer").GetComponent<Transform>();

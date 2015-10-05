@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class GameFSM : MonoFSM {
 
@@ -12,15 +13,11 @@ public class GameFSM : MonoFSM {
 
 	#endregion
 
-	protected override void Start()
+	protected override void SetStates()
 	{
-		base.states = new List<IState>
+		states = new List<IState>
 		{
-			new RangeState(),
-			new TestingState()
+			new LineDrawingState()
 		};
-
-		base.Start();
 	}
-	
 }

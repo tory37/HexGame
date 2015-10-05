@@ -22,6 +22,10 @@ public abstract class MonoFSM : MonoBehaviour {
 	/// </summary>
 	protected virtual void Start()
 	{
+		SetStates();
+
+		Initialize();
+
 		foreach ( IState state in states )
 		{
 			state.Initialize(this);
@@ -29,6 +33,10 @@ public abstract class MonoFSM : MonoBehaviour {
 
 		currentState = states[0];
 	}
+
+	protected abstract void SetStates();
+
+	protected virtual void Initialize() { }
 
 	protected void Update()
 	{

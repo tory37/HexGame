@@ -3,7 +3,7 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 
-public class TestingState : IState
+public class LineDrawingState : IState
 {
 	private GameFSM gameFSM;
 
@@ -12,10 +12,7 @@ public class TestingState : IState
 		gameFSM = (GameFSM)callingfsm;
 	}
 
-	public void OnEnter()
-	{
-		
-	}
+	public void OnEnter() { }
 
 	public void OnUpdate()
 	{
@@ -35,23 +32,11 @@ public class TestingState : IState
 		}
 	}
 
-	public void OnFixedUpdate()
-	{
-		
-	}
+	public void OnFixedUpdate(){}
 
-	public void OnLateUpdate()
-	{
-		
-	}
+	public void OnLateUpdate(){}
 
-	public void OnExit()
-	{
-		
-	}
+	public void OnExit(){}
 
-	public void CheckTransitions()
-	{
-		
-	}
+	public void CheckTransitions(){}
 }

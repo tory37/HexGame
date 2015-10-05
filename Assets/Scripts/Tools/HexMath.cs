@@ -464,17 +464,12 @@ public class HexMath {
 	{
 		List<Cube> results = new List<Cube>();
 
-		int leftX = center.x - range;
-		int rightX = center.x + range;
-		int underY = center.y - range;
-		int overY = center.y + range;
-
-		for (int dx = leftX; dx <= rightX; dx++ )
+		for (int dx = -range; dx <= range; dx++ )
 		{
-			for (int dy = underY; dy <= overY; dy++ )
+			for (int dy = Mathf.Max(-range, -dx- range); dy <= Mathf.Min(range, -dx+ range); dy++ )
 			{
 				var dz = -dx-dy;
-				results.Add(new Cube(dx, dy, dz));
+				results.Add(new Cube(center.x + dx, center.y + dy, center.z + dz));
 			}
 		}
 
