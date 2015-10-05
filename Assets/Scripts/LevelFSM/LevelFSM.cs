@@ -79,14 +79,12 @@ public class ListenForInputState : IState
 
     #region IState Overrides
 
-    public void Initialize(MonoFSM callingfsm)
+    public override void Initialize(MonoFSM callingfsm)
     {
         levelfsm = (LevelFSM)callingfsm;
     }
 
-    public void OnEnter() { }
-
-    public void OnUpdate()
+    public override void OnUpdate()
     {
         if (Input.GetMouseButtonDown(0))
         {
@@ -100,14 +98,6 @@ public class ListenForInputState : IState
             }
         }
     }
-
-    public void OnFixedUpdate() { }
-
-    public void OnLateUpdate() { }
-
-    public void OnExit() { }
-
-    public void CheckTransitions() { }
 
     #endregion
 }
@@ -127,18 +117,18 @@ public class MoveCharacterState : IState
 
     #region IState Overrides
 
-    public void Initialize(MonoFSM callingfsm)
+    public override void Initialize(MonoFSM callingfsm)
     {
         levelfsm = (LevelFSM)callingfsm;
     }
 
-    public void OnEnter() 
+    public override void OnEnter()
     {
         lastTile = levelfsm.CurrentTile;
         currentTileCube = HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(levelfsm.CurrentTile.transform.position, .5f, HexMath.OffsetType.OddR)));
     }
 
-    public void OnUpdate()
+    public override void OnUpdate()
     {
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -148,13 +138,14 @@ public class MoveCharacterState : IState
             
             if (cubeHit != lastCube && HexMath.CubeDistance(currentTileCube, cubeHit) <= levelfsm.CurrentCharacter.Movement)
             {
+                lastCube = cubeHit;
+
                 if (levelfsm.LineContainer != null)
                     GameObject.Destroy(levelfsm.LineContainer);
 
                 levelfsm.LineContainer = new GameObject("Line Continer").GetComponent<Transform>();
 
                 List<HexMath.Cube> hexes = HexMath.GetHexInLine(currentTileCube, cubeHit);
-
 
                 foreach (var cube in hexes)
                 {
@@ -166,14 +157,6 @@ public class MoveCharacterState : IState
             }
         }
     }
-
-    public void OnFixedUpdate() { }
-
-    public void OnLateUpdate() { }
-
-    public void OnExit() { }
-
-    public void CheckTransitions() { }
 
     #endregion
 }
