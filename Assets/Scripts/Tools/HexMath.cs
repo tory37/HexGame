@@ -43,6 +43,30 @@ public class HexMath {
             }
             return false;
         }
+
+		public static bool operator ==(Cube left, Cube right)
+		{
+			try
+			{
+				return left.x == right.x && left.y == right.y && left.z == right.z;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		public static bool operator != (Cube left, Cube right)
+		{
+			try
+			{
+				return !(left.x == right.x && left.y == right.y && left.z == right.z);
+			}
+			catch
+			{
+				return true;
+			}
+		}
 	}
 
 	public class CubeFraction
@@ -347,6 +371,25 @@ public class HexMath {
 		return new CubeFraction(axial.q, -axial.q - axial.r, axial.r);
 	}
 
+	public static Vector2 AxialToWorld(Axial axial, float pointRadius, OffsetType type)
+	{
+		float x;
+		float y;
+
+		if (type == OffsetType.EvenR || type == OffsetType.OddR)
+		{
+			x = pointRadius * Mathf.Sqrt( 3 ) * (axial.q + axial.r / 2);
+			y = pointRadius * 3 / 2 * axial.r;
+		}
+		else
+		{
+			x = pointRadius * 3 / 2 * axial.q;
+			y = pointRadius * Mathf.Sqrt( 3 ) * (axial.r + axial.q / 2);
+		}
+
+		return new Vector2( x, y );
+	}
+
 	public static AxialFraction WorldToAxial(Vector2 point, float pointRadius, OffsetType type)
 	{
 		float q;
@@ -428,6 +471,16 @@ public class HexMath {
 		}
 
 		return new Vector2(x, y);
+	}
+
+	public static Cube RoundWorldToCube(Vector2 point, float pointRadius, OffsetType type)
+	{
+		return CubeRound( AxialToCube( WorldToAxial( point, pointRadius, type ) ) );
+	}
+
+	public static Vector2 CubeToWorld(Cube cube, float pointRadius, OffsetType type)
+	{
+		return AxialToWorld( CubeToAxial( cube ), pointRadius, type );
 	}
 
 	#endregion

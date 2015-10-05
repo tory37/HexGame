@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System;
 
 /// <summary>
 /// Implement this to have a functioning finite state machine that is also a monobehaviour
@@ -10,12 +12,12 @@ public abstract class MonoFSM : MonoBehaviour {
 	/// <summary>
 	/// This is a list of states in the fsm
 	/// </summary>
-	public List<IState> states;
+	public Dictionary<string, State> states;
 
 	/// <summary>
 	/// This represents what state the machine is currently in
 	/// </summary>
-	IState currentState = null;
+	State currentState = null;
 
 	/// <summary>
 	/// This calls initialize on each state in the fsm. 
@@ -26,12 +28,12 @@ public abstract class MonoFSM : MonoBehaviour {
 
 		Initialize();
 
-		foreach ( IState state in states )
+		foreach ( State state in states.Values )
 		{
 			state.Initialize(this);
 		}
 
-		currentState = states[0];
+		currentState = states.Values.ElementAt( 0 );
 	}
 
 	protected abstract void SetStates();
@@ -54,10 +56,14 @@ public abstract class MonoFSM : MonoBehaviour {
 		currentState.CheckTransitions();
 	}
 
-	protected void Transition(IState toState)
+	public void Transition(string toState)
 	{
 		currentState.OnExit();
-		currentState = toState;
-		currentState.OnEnter();
+		if ( states.TryGetValue( toState, out currentState ) )
+		{
+			currentState.OnEnter();
+		}
+		else
+			throw new Exception( "State " + toState + " is not defined, check if your string is correct." );
 	}
 }

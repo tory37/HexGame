@@ -4,10 +4,22 @@ using System.Collections.Generic;
 
 public class Tile : MonoBehaviour
 {
-	public bool Obstructed { get { return obstructred; } }
-	[SerializeField] private bool obstructred;
+	#region Editor Interface
 
-    [SerializeField] public Character occupiedBy = null;
+	
+	[SerializeField] private bool obstructred;
+    [SerializeField] private Character occupiedBy = null;
+
+
+	#endregion 
+
+	#region Public Interface
+
+	public bool Obstructed { get { return obstructred; } }
+
+	public Character OccupiedBy { get { return occupiedBy; } set { occupiedBy = value; } }
+
+	#endregion
 
 	public void Instantiate(HexMath.Cube position)
 	{

@@ -15,9 +15,9 @@ public class GameFSM : MonoFSM {
 
 	protected override void SetStates()
 	{
-		states = new List<IState>
+		states = new Dictionary<string,State>
 		{
-			new LineDrawingState()
+			{ "LineDrawingState", new LineDrawingState()}
 		};
 	}
 }
