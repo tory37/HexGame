@@ -7,12 +7,14 @@ public class Character : MonoBehaviour {
 
 	[Header("Base Stats")]
 	[SerializeField] private int height;
+    [SerializeField] private int movement;
 
 	#endregion
 
 	#region Public Interface
 
 	public int Height { get { return height; } }
+    public int Movement { get { return movement; } }
 
 	#endregion
 

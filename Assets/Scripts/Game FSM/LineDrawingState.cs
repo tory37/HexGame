@@ -12,10 +12,8 @@ public class LineDrawingState : IState
 		gameFSM = (GameFSM)callingfsm;
 	}
 
-	public void OnEnter() { }
-
-	public void OnUpdate()
-	{
+	public override void OnUpdate()
+    {
 		Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
 		List<HexMath.Cube> hexes = HexMath.GetHexInLine(new HexMath.Cube(0, 0, 0), HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(new Vector2(mousePos.x, mousePos.z), .5f, HexMath.OffsetType.OddR))));
@@ -31,12 +29,4 @@ public class LineDrawingState : IState
 			t.transform.parent = gameFSM.lineContainer;
 		}
 	}
-
-	public void OnFixedUpdate(){}
-
-	public void OnLateUpdate(){}
-
-	public void OnExit(){}
-
-	public void CheckTransitions(){}
 }

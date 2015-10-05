@@ -4,7 +4,7 @@ using System.Collections;
 /// <summary>
 /// Implement this to make a class a state
 /// </summary>
-public interface IState
+public abstract class IState
 {
 	/// <summary>
 	/// Use this function to do anything you would need to do in
@@ -12,11 +12,11 @@ public interface IState
 	/// FSM if you need.
 	/// </summary>
 	/// <param name="callingfsm"></param>
-	void Initialize(MonoFSM callingfsm);
-	void OnEnter();
-	void OnUpdate();
-	void OnFixedUpdate();
-	void OnLateUpdate();
-	void OnExit();
-	void CheckTransitions();
+    public virtual void Initialize(MonoFSM callingfsm) { }
+    public virtual void OnEnter() { }
+    public virtual void OnUpdate() { }
+    public virtual void OnFixedUpdate() { }
+    public virtual void OnLateUpdate() { }
+    public virtual void OnExit() { }
+    public virtual void CheckTransitions() { }
 }

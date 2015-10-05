@@ -33,6 +33,16 @@ public class HexMath {
 		{
 			return "Cube: (" + x + ", " + y + ", " + z + ")";
 		}
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Cube)
+            {
+                Cube oth = (Cube)obj;
+                return x == oth.x && y == oth.y && z == oth.z;
+            }
+            return false;
+        }
 	}
 
 	public class CubeFraction
