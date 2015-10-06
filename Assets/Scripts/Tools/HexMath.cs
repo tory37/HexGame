@@ -515,7 +515,7 @@ public class HexMath {
 
 		List<Cube> results = new List<Cube>();
 
-		for (int i = 0; i < distance; i++)
+		for (int i = 0; i <= distance; i++)
 		{
 			results.Add(CubeRound(CubeLerp(from, to, 1.0f / distance * (float)i)));
 		}
