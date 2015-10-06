@@ -361,6 +361,54 @@ public class HexMath {
 		return cube;
 	}
 
+	public static Cube OffsetToCube( Offset offset, OffsetType type )
+	{
+		Cube c;
+
+		if (type == OffsetType.EvenQ)
+		{
+			c = EvenQToCube(offset);
+		}
+		else if (type == OffsetType.EvenR)
+		{
+			c = EvenRToCube(offset);
+		}
+		else if (type == OffsetType.OddQ)
+		{
+			c = OddQToCube(offset);
+		}
+		else
+		{
+			c = OddRToCube(offset);
+		}
+
+		return c;
+	}
+
+	public static Offset CubeToOffset( Cube cube, OffsetType type )
+	{
+		Offset o;
+
+		if (type == OffsetType.EvenQ)
+		{
+			o = CubeToEvenQ(cube);
+		}
+		else if (type == OffsetType.EvenR)
+		{
+			o = CubeToEvenR(cube);
+		}
+		else if (type == OffsetType.OddQ)
+		{
+			o = CubeToOddQ(cube);
+		}
+		else
+		{
+			o = CubeToOddR(cube);
+		}
+
+		return o;
+	}
+
 	public static Axial CubeToAxial(Cube cube)
 	{
 		return new Axial(cube.x, cube.z);
@@ -487,6 +535,14 @@ public class HexMath {
 
 	#region Others
 
+	public static int OffsetDistance(Offset a, Offset b, OffsetType type)
+	{
+		Cube ac = OffsetToCube(a, type);
+		Cube bc = OffsetToCube(b, type);
+
+		return CubeDistance(ac, bc);
+	}
+
 	/// <summary>
 	/// This function assumes your cube is a regular
 	/// cube, with integer values and not fractional values
@@ -523,6 +579,21 @@ public class HexMath {
 		return results;
 	}
 
+	public static List<Offset> GetHexInLine(Offset a, Offset b, OffsetType type)
+	{
+		Cube ac = OffsetToCube(a, type);
+		Cube bc = OffsetToCube(b, type);
+
+		List<Cube> cubeList = GetHexInLine(ac, bc);
+
+		List<Offset> offsetList = new List<Offset>();
+
+		foreach ( Cube cube in cubeList )
+			offsetList.Add(CubeToOffset(cube, type));
+
+		return offsetList;
+	}
+
 	public static List<Cube> GetHexInRange(Cube center, int range)
 	{
 		List<Cube> results = new List<Cube>();
@@ -540,6 +611,5 @@ public class HexMath {
 	}
 
 	#endregion
-
 
 }

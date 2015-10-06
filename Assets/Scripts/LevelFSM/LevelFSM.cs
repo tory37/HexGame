@@ -63,12 +63,23 @@ public class LevelFSM : MonoFSM
 	/// This is a list of coordinates used for moving a character, if we are in a state that needs this.
 	/// This is in the machine to be shared between states
 	/// </summary>
-	public List<HexMath.Cube> moveTileCoords = null;
-	#endregion
+	public List<HexMath.Offset> moveTileCoords = null;
 
-	#region Overrides
+	public Quaternion TileRotation
+	{
+		get	{
+			if ( offsetType == HexMath.OffsetType.EvenR || offsetType == HexMath.OffsetType.OddR )
+				return Quaternion.Euler(0f, 30f, 0f);
+			else
+				return Quaternion.identity;
+		}
+	}
 
-	protected override void SetStates()
+		#endregion
+
+		#region Overrides
+
+		protected override void SetStates()
 	{
 		states = new Dictionary<string, State>
 		{
@@ -211,15 +222,15 @@ public class SelectCharacterTargetTileState : State
 	private Tile selectedTile;
 
 	/// <summary>
-	/// The cube coordinates of the tile object being worked with
+	/// The offset coordinates of the tile object being worked with
 	/// </summary>
-	private HexMath.Cube selectedTileCubeCoords;
+	private HexMath.Offset selectedTileCoords;
 
 	/// <summary>
 	/// The cube coordinate of the last cube hit by our raycast
 	/// when moving in search of a target tile
 	/// </summary>
-	private HexMath.Cube lastCube;
+	private HexMath.Offset lastCoord;
 
 	#endregion
 
@@ -237,8 +248,8 @@ public class SelectCharacterTargetTileState : State
 	{
 		// Initialize these variables
 		selectedTile = levelfsm.CurrentlySelectedTile;
-		selectedTileCubeCoords = HexMath.RoundWorldToCube( new Vector2( selectedTile.transform.position.x, selectedTile.transform.position.z ), .5f, levelfsm.OffsetType );
-		levelfsm.moveTileCoords = new List<HexMath.Cube>();
+		selectedTileCoords = HexMath.OffsetRound( new Vector2( selectedTile.transform.position.x, selectedTile.transform.position.z ), .5f, levelfsm.OffsetType );
+		levelfsm.moveTileCoords = new List<HexMath.Offset>();
 
 		// Create a new line container and give it the starting tile to
 		// draw
@@ -247,10 +258,9 @@ public class SelectCharacterTargetTileState : State
 
 		levelfsm.LineContainer = new GameObject( "Line Continer" ).GetComponent<Transform>();
 
-		lastCube = selectedTileCubeCoords;
-		HexMath.Offset offset = HexMath.CubeToOddR( selectedTileCubeCoords );
-		Vector2 world = HexMath.OffsetToWorld( offset, .5f, levelfsm.OffsetType );
-		Tile t = (Tile)GameObject.Instantiate( levelfsm.SelectionTilePrefab, new Vector3( world.x, 0.2f, world.y ), Quaternion.Euler( 0, 30f, 0 ) );
+		lastCoord = selectedTileCoords;
+		Vector2 world = HexMath.OffsetToWorld( selectedTileCoords, .5f, levelfsm.OffsetType );
+		Tile t = (Tile)GameObject.Instantiate( levelfsm.SelectionTilePrefab, new Vector3( world.x, 0.2f, world.y ), levelfsm.TileRotation );
 		t.transform.parent = levelfsm.LineContainer;
 	}
 
@@ -264,13 +274,13 @@ public class SelectCharacterTargetTileState : State
 		Ray ray = Camera.main.ScreenPointToRay( Input.mousePosition );
 		if ( Physics.Raycast( ray, out hit ) )
 		{
-			// Round that hit location to a cube coordinate
-			HexMath.Cube cubeHit = HexMath.RoundWorldToCube( new Vector2( hit.point.x, hit.point.z ), .5f, levelfsm.OffsetType );
+			// Round that hit location to a offset coordinate
+			HexMath.Offset offsetHit = HexMath.OffsetRound( new Vector2( hit.point.x, hit.point.z ), .5f, levelfsm.OffsetType );
 
-			// If the cube coordinate we hit is not the same as the last one and within the characters range, redraw the tiles in between the two locations
-			if ( cubeHit != lastCube && HexMath.CubeDistance( selectedTileCubeCoords, cubeHit ) <= levelfsm.CurrentlySelectedCharacter.Movement )
+			// If the offset coordinate we hit is not the same as the last one and within the characters range, redraw the tiles in between the two locations
+			if ( offsetHit != lastCoord && HexMath.OffsetDistance( selectedTileCoords, offsetHit, levelfsm.OffsetType ) <= levelfsm.CurrentlySelectedCharacter.Movement )
 			{
-				lastCube = cubeHit;
+				lastCoord = offsetHit;
 
 				GameObject.Destroy(levelfsm.LineContainer.gameObject);
 
@@ -280,18 +290,17 @@ public class SelectCharacterTargetTileState : State
 				levelfsm.LineContainer = new GameObject("Line Continer").GetComponent<Transform>();
 
 				// If what we hit was the starting tile, then just draw one over that
-				if ( lastCube == selectedTileCubeCoords )
-					levelfsm.moveTileCoords = new List<HexMath.Cube> { lastCube };
+				if ( lastCoord == selectedTileCoords )
+					levelfsm.moveTileCoords = new List<HexMath.Offset> { lastCoord };
 				// Else get the tiles between the two points
 				else
-					levelfsm.moveTileCoords = HexMath.GetHexInLine( selectedTileCubeCoords, lastCube );
+					levelfsm.moveTileCoords = HexMath.GetHexInLine( selectedTileCoords, lastCoord, levelfsm.OffsetType );
 
 				// Draw em
-				foreach ( var cube in levelfsm.moveTileCoords )
+				foreach ( var offset in levelfsm.moveTileCoords )
 				{
-					HexMath.Offset offset = HexMath.CubeToOddR( cube );
 					Vector2 world = HexMath.OffsetToWorld( offset, .5f, levelfsm.OffsetType );
-					Tile t = (Tile)GameObject.Instantiate( levelfsm.SelectionTilePrefab, new Vector3( world.x, 0.2f, world.y ), Quaternion.Euler( 0, 30f, 0 ) );
+					Tile t = (Tile)GameObject.Instantiate( levelfsm.SelectionTilePrefab, new Vector3( world.x, 0.2f, world.y ), levelfsm.TileRotation );
 					t.transform.parent = levelfsm.LineContainer;
 				}
 			}
@@ -311,9 +320,9 @@ public class SelectCharacterTargetTileState : State
 			Ray ray = Camera.main.ScreenPointToRay( Input.mousePosition );
 			if ( Physics.Raycast( ray, out hit ) )
 			{
-				HexMath.Cube hitCube = HexMath.RoundWorldToCube( new Vector2( hit.point.x, hit.point.z ), .5f, levelfsm.OffsetType );
+				HexMath.Offset hitOffset = HexMath.OffsetRound( new Vector2( hit.point.x, hit.point.z ), .5f, levelfsm.OffsetType );
 
-				int distance = HexMath.CubeDistance( selectedTileCubeCoords, hitCube );
+				int distance = HexMath.OffsetDistance( selectedTileCoords, hitOffset, levelfsm.OffsetType );
 				if ( distance > 0 && distance <= levelfsm.CurrentlySelectedCharacter.Movement )
 				{
 					levelfsm.Transition( "MoveCharacter" ); 
@@ -380,9 +389,9 @@ public class MoveCharacter : State
 
 		tilePositions = new List<Vector3>();
 
-		foreach ( HexMath.Cube cube in levelfsm.moveTileCoords )
+		foreach ( HexMath.Offset offset in levelfsm.moveTileCoords )
 		{
-			Vector2 world = HexMath.CubeToWorld( cube, .5f, levelfsm.OffsetType );
+			Vector2 world = HexMath.OffsetToWorld( offset, .5f, levelfsm.OffsetType );
 			tilePositions.Add( new Vector3( world.x, 0f, world.y ) );
 		}
 
