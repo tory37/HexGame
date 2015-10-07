@@ -16,7 +16,7 @@ public class LineDrawingState : State
     {
 		Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
-		List<HexMath.Cube> hexes = HexMath.GetHexInLine(new HexMath.Cube(0, 0, 0), HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(new Vector2(mousePos.x, mousePos.z), .5f, HexMath.OffsetType.OddR))));
+		List<HexMath.Cube> hexes = HexMath.GetCubesInLine(new HexMath.Cube(0, 0, 0), HexMath.CubeRound(HexMath.AxialToCube(HexMath.WorldToAxial(new Vector2(mousePos.x, mousePos.z), .5f, HexMath.OffsetType.OddR))));
 
 		GameObject.Destroy(gameFSM.lineContainer.gameObject);
 		gameFSM.lineContainer = new GameObject("Line Continer").GetComponent<Transform>();

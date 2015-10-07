@@ -67,6 +67,11 @@ public class HexMath {
 				return true;
 			}
 		}
+
+        public static Cube operator + (Cube left, Cube right)
+        {
+            return new Cube(left.x + right.x, left.y + right.y, left.z + right.z);
+        }
 	}
 
 	public class CubeFraction
@@ -535,6 +540,28 @@ public class HexMath {
 
 	#region Others
 
+    public static Cube[] CubeDirections = new Cube[] { new Cube(1, -1, 0), new Cube(1, 0, -1), new Cube(0, 1, -1),
+                                                new Cube(-1, 1, 0), new Cube(-1, 0, 1), new Cube(0, -1, 1)};
+
+    public static Cube CubeDirection(int direction)
+    {
+        return CubeDirections[direction];
+    }
+
+    public static Cube CubeNeighber(Cube start, int direction)
+    {
+        return start + CubeDirection(direction);
+    }
+
+    public static Offset OffsetNeighbor(Offset start, int direction, OffsetType type)
+    {
+        Cube startc = OffsetToCube(start, type);
+
+        Cube neighbor = CubeNeighber(startc, direction);
+
+        return CubeToOffset(neighbor, type);
+    }
+
 	public static int OffsetDistance(Offset a, Offset b, OffsetType type)
 	{
 		Cube ac = OffsetToCube(a, type);
@@ -565,7 +592,7 @@ public class HexMath {
 							 af.z + (bf.z - af.z) * t);
 	}
 
-	public static List<Cube> GetHexInLine(Cube from, Cube to)
+	public static List<Cube> GetCubesInLine(Cube from, Cube to)
 	{
 		int distance = CubeDistance(from, to);
 
@@ -579,12 +606,12 @@ public class HexMath {
 		return results;
 	}
 
-	public static List<Offset> GetHexInLine(Offset a, Offset b, OffsetType type)
+	public static List<Offset> GetOffsetsInLine(Offset a, Offset b, OffsetType type)
 	{
 		Cube ac = OffsetToCube(a, type);
 		Cube bc = OffsetToCube(b, type);
 
-		List<Cube> cubeList = GetHexInLine(ac, bc);
+		List<Cube> cubeList = GetCubesInLine(ac, bc);
 
 		List<Offset> offsetList = new List<Offset>();
 
@@ -594,7 +621,7 @@ public class HexMath {
 		return offsetList;
 	}
 
-	public static List<Cube> GetHexInRange(Cube center, int range)
+	public static List<Cube> GetCubesInRange(Cube center, int range)
 	{
 		List<Cube> results = new List<Cube>();
 
@@ -609,6 +636,18 @@ public class HexMath {
 
 		return results;
 	}
+
+    public static List<Offset> GetOffsetsInRange(Offset center, int range, OffsetType type)
+    {
+        List<Offset> offsets = new List<Offset>();
+
+        List<Cube> cubes = GetCubesInRange(OffsetToCube(center, type), range);
+
+        for (int i = 0; i < cubes.Count; i++)
+            offsets.Add(CubeToOffset(cubes[i], type));
+
+        return offsets;
+    }
 
 	#endregion
 

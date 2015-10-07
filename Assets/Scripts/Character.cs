@@ -9,6 +9,7 @@ public class Character : MonoBehaviour {
 	[SerializeField] private int height;
     [SerializeField] private int movement;
 	[SerializeField] private float moveAnimSpeed;
+    [SerializeField] private bool hasFlying;
 
 	#endregion
 
@@ -16,6 +17,7 @@ public class Character : MonoBehaviour {
 
 	public int Height { get { return height; } }
     public int Movement { get { return movement; } }
+    public bool HasFlying { get { return hasFlying; } }
 
 	public float MoveAnimSpeed { get { return moveAnimSpeed; } }
 

@@ -38,7 +38,7 @@ public class RangeState : State
 
 		if (input != 0)
 		{
-			List<HexMath.Cube> inRangeCubes = HexMath.GetHexInRange(new HexMath.Cube(3, -1, -2), input);
+			List<HexMath.Cube> inRangeCubes = HexMath.GetCubesInRange(new HexMath.Cube(3, -1, -2), input);
 
 			GameObject.Destroy(gamefsm.lineContainer.gameObject);
 			gamefsm.lineContainer = new GameObject("Line Continer").GetComponent<Transform>();

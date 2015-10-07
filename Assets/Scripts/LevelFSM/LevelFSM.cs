@@ -35,13 +35,12 @@ public class LevelFSM : MonoFSM
 	/// </summary>
 	public Dictionary<Vector3, Tile> tileDictionary { get; private set; }
 
-	public int maxRows { get; private set; }
-	public int minRows { get; private set; }
-	public int maxColumns { get; private set; }
-	public int minColumns { get; private set; }
-	public int maxHeight { get; private set; }
-	public int minHeight { get; private set; }
-	public float edgeRadius = .43301270189f;
+	public int MaxRows { get; private set; }
+	public int MinRows { get; private set; }
+	public int MaxColumns { get; private set; }
+	public int MinColumns { get; private set; }
+	public int MaxHeight { get; private set; }
+	public int MinHeight { get; private set; }
 
 	public float PointRadius { get { return pointRadius; } }
 	public float TileHeight { get { return tileHeight; } }
@@ -109,19 +108,19 @@ public class LevelFSM : MonoFSM
 		Debug.Log("X: " + camRotation.x + ", Y: " + camRotation.y);
 
 		if ( camRotation.x >= 0 && camRotation.x <= 180 )
-			CheckHeight = () => position.y >= minHeight;
+			CheckHeight = () => position.y >= MinHeight;
 		else
-			CheckHeight = () => position.y <= maxHeight;
+			CheckHeight = () => position.y <= MaxHeight;
 
 		if ( camRotation.y >= 0 && camRotation.y < 180 )
-			CheckColumn = () => position.x <= maxColumns;
+			CheckColumn = () => position.x <= MaxColumns;
 		else
-			CheckColumn = () => position.x >= minColumns;
+			CheckColumn = () => position.x >= MinColumns;
 
 		if ( camRotation.y >= 90 && camRotation.y < 270 )
-			CheckRow = () => position.z >= minRows;
+			CheckRow = () => position.z >= MinRows;
 		else
-			CheckRow = () => position.z <= maxRows;
+			CheckRow = () => position.z <= MaxRows;
 
 		//Check to see if we start inside a tile (we shouldnt though)
 		tileHit = CheckForTile(position);
@@ -146,6 +145,27 @@ public class LevelFSM : MonoFSM
 
 		return tileHit;
 	}
+
+    public List<Vector3> FindPath(Vector3 start, int movement)
+    {
+        HexMath.Offset startO = HexMath.OffsetRound(new Vector2(start.x, start.z), pointRadius, offsetType);
+
+        List<Vector3> vistited = new List<Vector3>();
+        vistited.Add(start);
+
+        List<Vector3> fringes = new List<Vector3>();
+        fringes.Add(start);
+
+        //Func<HexMath.Offset, bool> = (offset) =>  
+
+        for (int i = 1; i <= movement; i++)
+        {
+            List<HexMath.Offset> fringes = HexMath.GetOffsetsInRange(startO, CurrentlySelectedCharacter.Movement, offsetType);
+
+
+        }
+
+    }
 
 	//public Tile FindTileUnderMouse()
 	//{
@@ -207,9 +227,9 @@ public class LevelFSM : MonoFSM
 			HexMath.Offset offset = HexMath.OffsetRound( new Vector2( pos.x, pos.z ), pointRadius, offsetType );
 			int height = (int)(pos.y / tileHeight);
 
-			maxRows = minRows = offset.y;
-			maxColumns = minColumns = offset.x;
-			maxHeight = minHeight = height;
+			MaxRows = MinRows = offset.y;
+			MaxColumns = MinColumns = offset.x;
+			MaxHeight = MinHeight = height;
 
 			foreach ( Tile tile in tiles )
 			{
@@ -227,25 +247,25 @@ public class LevelFSM : MonoFSM
 			}
 		}
 
-		Debug.Log("Height: " + minHeight + ", " + maxHeight + "| Column: " + minColumns + ", " + maxColumns + "| Rows: " + minRows + ", " + maxRows);
+		Debug.Log("Height: " + MinHeight + ", " + MaxHeight + "| Column: " + MinColumns + ", " + MaxColumns + "| Rows: " + MinRows + ", " + MaxRows);
 	}
 
 	private void CheckRowColHeight(HexMath.Offset offset, int height)
 	{
-		if ( offset.x > maxColumns )
-			maxColumns = offset.x;
-        else if ( offset.x < minColumns )
-			minColumns = offset.x;
+		if ( offset.x > MaxColumns )
+			MaxColumns = offset.x;
+        else if ( offset.x < MinColumns )
+			MinColumns = offset.x;
 
-		if ( offset.y > maxRows )
-			maxRows = offset.y;
-		else if ( offset.y < minRows )
-			minRows = offset.y;
+		if ( offset.y > MaxRows )
+			MaxRows = offset.y;
+		else if ( offset.y < MinRows )
+			MinRows = offset.y;
 
-		if ( height > maxHeight )
-			maxHeight = height;
-		else if ( height < minHeight )
-			minHeight = height;
+		if ( height > MaxHeight )
+			MaxHeight = height;
+		else if ( height < MinHeight )
+			MinHeight = height;
 	}
 
 	#endregion
@@ -293,7 +313,7 @@ public class ListenForInputState : State
 		{
 			tileHit = levelfsm.FindTileUnderMouse();
 			Debug.Log(tileHit);
-			Debug.Log("Offset; " + HexMath.OffsetRound(new Vector2(tileHit.transform.position.x, tileHit.transform.position.z), levelfsm.PointRadius, levelfsm.OffsetType));
+			Debug.Log("Offset; " + HexMath.OffsetRound(new Vector2(tileHit.transform.position.x, tileHit.transform.position.z), levelfsm.PointRadius, levelfsm.OffsetType) + "| Height: " + Mathf.FloorToInt(tileHit.transform.position.y / levelfsm.TileHeight));
 		}
 	}
 
@@ -342,6 +362,7 @@ public class SelectCharacterTargetTileState : State
 	/// The offset coordinates of the tile object being worked with
 	/// </summary>
 	private HexMath.Offset selectedTileCoords;
+    private int selectedTileHeight;
 
 	/// <summary>
 	/// The cube coordinate of the last cube hit by our raycast
@@ -384,9 +405,12 @@ public class SelectCharacterTargetTileState : State
 		if ( tileHit != null && tileHit.OccupiedBy == null)
 		{
 			HexMath.Offset offsetHit = HexMath.OffsetRound(new Vector2(tileHit.transform.position.x, tileHit.transform.position.z), levelfsm.PointRadius, levelfsm.OffsetType);
+            int height = Mathf.FloorToInt(tileHit.transform.position.y / levelfsm.TileHeight);
+
+            int heightDiff = height - selectedTileHeight;
 
 			// If the offset coordinate we hit is not the same as the last one and within the characters range, redraw the tiles in between the two locations
-			if ( offsetHit != lastCoord && HexMath.OffsetDistance(selectedTileCoords, offsetHit, levelfsm.OffsetType) <= levelfsm.CurrentlySelectedCharacter.Movement )
+			if ( offsetHit != lastCoord && heightDiff < levelfsm.CurrentlySelectedCharacter.Height && HexMath.OffsetDistance(selectedTileCoords, offsetHit, levelfsm.OffsetType) <= levelfsm.CurrentlySelectedCharacter.Movement )
 			{
 				lastCoord = offsetHit;
 
@@ -433,7 +457,9 @@ public class SelectCharacterTargetTileState : State
 			levelfsm.moveTileCoords = new List<HexMath.Offset> { a };
 		// Else get the tiles between the two points
 		else
-			levelfsm.moveTileCoords = HexMath.GetHexInLine(selectedTileCoords, lastCoord, levelfsm.OffsetType);
+			levelfsm.moveTileCoords = HexMath.GetOffsetsInLine(selectedTileCoords, lastCoord, levelfsm.OffsetType);
+
+
 
 		// Draw em
 		foreach ( var offset in levelfsm.moveTileCoords )
