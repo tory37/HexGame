@@ -16,6 +16,12 @@ public class LevelFSM : MonoFSM
 	[SerializeField]
 	private Tile selectionTilePrefab;
 
+	[SerializeField]
+	private float pointRadius;
+
+	[SerializeField]
+	private float tileHeight;
+
 	[Header("The current offset pattern of the game board.")]
 	[SerializeField]
 	private HexMath.OffsetType offsetType;
@@ -28,6 +34,17 @@ public class LevelFSM : MonoFSM
 	/// The dictionary of all tiles whose key is a vector3 defined by offset tile positions (row, vertical height, columns)
 	/// </summary>
 	public Dictionary<Vector3, Tile> tileDictionary { get; private set; }
+
+	public int maxRows { get; private set; }
+	public int minRows { get; private set; }
+	public int maxColumns { get; private set; }
+	public int minColumns { get; private set; }
+	public int maxHeight { get; private set; }
+	public int minHeight { get; private set; }
+	public float edgeRadius = .43301270189f;
+
+	public float PointRadius { get { return pointRadius; } }
+	public float TileHeight { get { return tileHeight; } }
 
 	/// <summary>
 	/// This represents the tile that is currently being worked with, if we are in a state concerned with that.
@@ -75,9 +92,80 @@ public class LevelFSM : MonoFSM
 		}
 	}
 
-		#endregion
+	public Tile FindTileUnderMouse()
+	{
+		Tile tileHit = null;
 
-		#region Overrides
+		Vector3 position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		Vector3 direction = ray.direction;
+		Vector3 camRotation = Camera.main.transform.rotation.eulerAngles;
+
+		Func<bool> CheckColumn;
+		Func<bool> CheckRow;
+		Func<bool> CheckHeight;
+
+		Debug.Log("Camera:");
+		Debug.Log("X: " + camRotation.x + ", Y: " + camRotation.y);
+
+		if ( camRotation.x >= 0 && camRotation.x <= 180 )
+			CheckHeight = () => position.y >= minHeight;
+		else
+			CheckHeight = () => position.y <= maxHeight;
+
+		if ( camRotation.y >= 0 && camRotation.y < 180 )
+			CheckColumn = () => position.x <= maxColumns;
+		else
+			CheckColumn = () => position.x >= minColumns;
+
+		if ( camRotation.y >= 90 && camRotation.y < 270 )
+			CheckRow = () => position.z >= minRows;
+		else
+			CheckRow = () => position.z <= maxRows;
+
+		//Check to see if we start inside a tile (we shouldnt though)
+		tileHit = CheckForTile(position);
+
+		while ( tileHit == null && CheckColumn() && CheckRow() && CheckHeight() )
+		{
+			position += direction * tileHeight;
+			tileHit = CheckForTile(position);
+		}
+
+		return tileHit;
+	}
+
+	public Tile CheckForTile(Vector3 position)
+	{
+		Tile tileHit = null;
+
+		HexMath.Offset offset = HexMath.OffsetRound(new Vector2(position.x, position.z), pointRadius, offsetType);
+		int height = Mathf.FloorToInt(position.y / tileHeight);
+
+		tileDictionary.TryGetValue(new Vector3(offset.x, height, offset.y), out tileHit);
+
+		return tileHit;
+	}
+
+	//public Tile FindTileUnderMouse()
+	//{
+	//	Tile tileHit = null;
+	//	RaycastHit hit;
+	//	Ray ray = Camera.main.ScreenPointToRay( Input.mousePosition );
+	//	if ( Physics.Raycast(ray, out hit) )
+	//	{
+	//		HexMath.Offset offset = HexMath.OffsetRound( new Vector2( hit.point.x, hit.point.z ), pointRadius, OffsetType );
+	//		Vector3 position = new Vector3( offset.x, 0f, offset.y );
+	//		Debug.Log(tileDictionary.ContainsKey(position));
+	//		tileDictionary.TryGetValue(position, out tileHit);
+	//	}
+
+	//	return tileHit;
+	//}
+
+	#endregion
+
+	#region Overrides
 
 		protected override void SetStates()
 	{
@@ -112,17 +200,52 @@ public class LevelFSM : MonoFSM
 
 		Component[] tiles = TileMaster.GetComponentsInChildren( typeof( Tile ) );
 
-		foreach ( Tile tile in tiles )
+		if ( tiles != null )
 		{
-			Vector3 pos = tile.transform.position;
-			HexMath.Offset offset = HexMath.OffsetRound( new Vector2( pos.x, pos.z ), .5f, offsetType );
-			int height = (int)(pos.y / .2f);
-			Vector3 key = new Vector3( offset.x, height, offset.y );
-			if ( !tileDictionary.ContainsKey( key ) )
-				tileDictionary.Add( key, tile );
-			else
-				Destroy( tile.gameObject );
+
+			Vector3 pos = tiles[0].transform.position;
+			HexMath.Offset offset = HexMath.OffsetRound( new Vector2( pos.x, pos.z ), pointRadius, offsetType );
+			int height = (int)(pos.y / tileHeight);
+
+			maxRows = minRows = offset.y;
+			maxColumns = minColumns = offset.x;
+			maxHeight = minHeight = height;
+
+			foreach ( Tile tile in tiles )
+			{
+				pos = tile.transform.position;
+				offset = HexMath.OffsetRound(new Vector2(pos.x, pos.z), pointRadius, offsetType);
+				height = Mathf.FloorToInt(pos.y / tileHeight);
+				Vector3 key = new Vector3( offset.x, height, offset.y );
+				if ( !tileDictionary.ContainsKey(key) )
+				{
+					tileDictionary.Add(key, tile);
+					CheckRowColHeight(offset, height);
+				}
+				else
+					Destroy(tile.gameObject);
+			}
 		}
+
+		Debug.Log("Height: " + minHeight + ", " + maxHeight + "| Column: " + minColumns + ", " + maxColumns + "| Rows: " + minRows + ", " + maxRows);
+	}
+
+	private void CheckRowColHeight(HexMath.Offset offset, int height)
+	{
+		if ( offset.x > maxColumns )
+			maxColumns = offset.x;
+        else if ( offset.x < minColumns )
+			minColumns = offset.x;
+
+		if ( offset.y > maxRows )
+			maxRows = offset.y;
+		else if ( offset.y < minRows )
+			minRows = offset.y;
+
+		if ( height > maxHeight )
+			maxHeight = height;
+		else if ( height < minHeight )
+			minHeight = height;
 	}
 
 	#endregion
@@ -168,15 +291,9 @@ public class ListenForInputState : State
 	{
 		if ( Input.GetMouseButtonDown( 0 ) )
 		{
-			RaycastHit hit;
-			Ray ray = Camera.main.ScreenPointToRay( Input.mousePosition );
-			if ( Physics.Raycast( ray, out hit ) )
-			{
-				HexMath.Offset offset = HexMath.OffsetRound( new Vector2( hit.point.x, hit.point.z ), .5f, levelfsm.OffsetType );
-				Vector3 position = new Vector3( offset.x, 0f, offset.y );
-				Debug.Log( levelfsm.tileDictionary.ContainsKey( position ) );
-				levelfsm.tileDictionary.TryGetValue( position, out tileHit );
-			}
+			tileHit = levelfsm.FindTileUnderMouse();
+			Debug.Log(tileHit);
+			Debug.Log("Offset; " + HexMath.OffsetRound(new Vector2(tileHit.transform.position.x, tileHit.transform.position.z), levelfsm.PointRadius, levelfsm.OffsetType));
 		}
 	}
 
@@ -248,20 +365,12 @@ public class SelectCharacterTargetTileState : State
 	{
 		// Initialize these variables
 		selectedTile = levelfsm.CurrentlySelectedTile;
-		selectedTileCoords = HexMath.OffsetRound( new Vector2( selectedTile.transform.position.x, selectedTile.transform.position.z ), .5f, levelfsm.OffsetType );
+		selectedTileCoords = HexMath.OffsetRound( new Vector2( selectedTile.transform.position.x, selectedTile.transform.position.z ), levelfsm.PointRadius, levelfsm.OffsetType );
 		levelfsm.moveTileCoords = new List<HexMath.Offset>();
 
-		// Create a new line container and give it the starting tile to
-		// draw
-		if ( levelfsm.LineContainer != null )
-			GameObject.Destroy( levelfsm.LineContainer.gameObject );
-
-		levelfsm.LineContainer = new GameObject( "Line Continer" ).GetComponent<Transform>();
-
 		lastCoord = selectedTileCoords;
-		Vector2 world = HexMath.OffsetToWorld( selectedTileCoords, .5f, levelfsm.OffsetType );
-		Tile t = (Tile)GameObject.Instantiate( levelfsm.SelectionTilePrefab, new Vector3( world.x, 0.2f, world.y ), levelfsm.TileRotation );
-		t.transform.parent = levelfsm.LineContainer;
+
+		DrawPath(selectedTileCoords, selectedTileCoords);
 	}
 
 	/// <summary>
@@ -269,40 +378,19 @@ public class SelectCharacterTargetTileState : State
 	/// </summary>
 	public override void OnUpdate()
 	{
-		// If we hit the underlying platform
-		RaycastHit hit;
-		Ray ray = Camera.main.ScreenPointToRay( Input.mousePosition );
-		if ( Physics.Raycast( ray, out hit ) )
+		// Round that hit location to a offset coordinate
+		Tile tileHit = levelfsm.FindTileUnderMouse();
+
+		if ( tileHit != null && tileHit.OccupiedBy == null)
 		{
-			// Round that hit location to a offset coordinate
-			HexMath.Offset offsetHit = HexMath.OffsetRound( new Vector2( hit.point.x, hit.point.z ), .5f, levelfsm.OffsetType );
+			HexMath.Offset offsetHit = HexMath.OffsetRound(new Vector2(tileHit.transform.position.x, tileHit.transform.position.z), levelfsm.PointRadius, levelfsm.OffsetType);
 
 			// If the offset coordinate we hit is not the same as the last one and within the characters range, redraw the tiles in between the two locations
-			if ( offsetHit != lastCoord && HexMath.OffsetDistance( selectedTileCoords, offsetHit, levelfsm.OffsetType ) <= levelfsm.CurrentlySelectedCharacter.Movement )
+			if ( offsetHit != lastCoord && HexMath.OffsetDistance(selectedTileCoords, offsetHit, levelfsm.OffsetType) <= levelfsm.CurrentlySelectedCharacter.Movement )
 			{
 				lastCoord = offsetHit;
 
-				GameObject.Destroy(levelfsm.LineContainer.gameObject);
-
-				if ( levelfsm.LineContainer != null )
-					GameObject.Destroy( levelfsm.LineContainer.gameObject );
-
-				levelfsm.LineContainer = new GameObject("Line Continer").GetComponent<Transform>();
-
-				// If what we hit was the starting tile, then just draw one over that
-				if ( lastCoord == selectedTileCoords )
-					levelfsm.moveTileCoords = new List<HexMath.Offset> { lastCoord };
-				// Else get the tiles between the two points
-				else
-					levelfsm.moveTileCoords = HexMath.GetHexInLine( selectedTileCoords, lastCoord, levelfsm.OffsetType );
-
-				// Draw em
-				foreach ( var offset in levelfsm.moveTileCoords )
-				{
-					Vector2 world = HexMath.OffsetToWorld( offset, .5f, levelfsm.OffsetType );
-					Tile t = (Tile)GameObject.Instantiate( levelfsm.SelectionTilePrefab, new Vector3( world.x, 0.2f, world.y ), levelfsm.TileRotation );
-					t.transform.parent = levelfsm.LineContainer;
-				}
+				DrawPath(selectedTileCoords, offsetHit);
 			}
 		}
 	}
@@ -320,7 +408,7 @@ public class SelectCharacterTargetTileState : State
 			Ray ray = Camera.main.ScreenPointToRay( Input.mousePosition );
 			if ( Physics.Raycast( ray, out hit ) )
 			{
-				HexMath.Offset hitOffset = HexMath.OffsetRound( new Vector2( hit.point.x, hit.point.z ), .5f, levelfsm.OffsetType );
+				HexMath.Offset hitOffset = HexMath.OffsetRound( new Vector2( hit.point.x, hit.point.z ), levelfsm.PointRadius, levelfsm.OffsetType );
 
 				int distance = HexMath.OffsetDistance( selectedTileCoords, hitOffset, levelfsm.OffsetType );
 				if ( distance > 0 && distance <= levelfsm.CurrentlySelectedCharacter.Movement )
@@ -328,6 +416,31 @@ public class SelectCharacterTargetTileState : State
 					levelfsm.Transition( "MoveCharacter" ); 
 				}
 			}
+		}
+	}
+
+	private void DrawPath(HexMath.Offset a, HexMath.Offset b)
+	{
+		// Create a new line container and give it the starting tile to
+		// draw
+		if ( levelfsm.LineContainer != null )
+			GameObject.Destroy( levelfsm.LineContainer.gameObject );
+
+		levelfsm.LineContainer = new GameObject( "Line Continer" ).GetComponent<Transform>();
+
+		// If what we hit was the starting tile, then just draw one over that
+		if ( a == b )
+			levelfsm.moveTileCoords = new List<HexMath.Offset> { a };
+		// Else get the tiles between the two points
+		else
+			levelfsm.moveTileCoords = HexMath.GetHexInLine(selectedTileCoords, lastCoord, levelfsm.OffsetType);
+
+		// Draw em
+		foreach ( var offset in levelfsm.moveTileCoords )
+		{
+			Vector2 world = HexMath.OffsetToWorld( offset, levelfsm.PointRadius, levelfsm.OffsetType );
+			Tile t = (Tile)GameObject.Instantiate( levelfsm.SelectionTilePrefab, new Vector3( world.x, levelfsm.TileHeight, world.y ), levelfsm.TileRotation );
+			t.transform.parent = levelfsm.LineContainer;
 		}
 	}
 
@@ -391,7 +504,7 @@ public class MoveCharacter : State
 
 		foreach ( HexMath.Offset offset in levelfsm.moveTileCoords )
 		{
-			Vector2 world = HexMath.OffsetToWorld( offset, .5f, levelfsm.OffsetType );
+			Vector2 world = HexMath.OffsetToWorld( offset, levelfsm.PointRadius, levelfsm.OffsetType );
 			tilePositions.Add( new Vector3( world.x, 0f, world.y ) );
 		}
 
@@ -449,7 +562,7 @@ public class MoveCharacter : State
 		levelfsm.CurrentlySelectedTile.OccupiedBy = null;
 
 		// Add the character to the new tile
-		HexMath.Offset offset = HexMath.OffsetRound(new Vector2(currentTarget.x, currentTarget.z), .5f, levelfsm.OffsetType);
+		HexMath.Offset offset = HexMath.OffsetRound(new Vector2(currentTarget.x, currentTarget.z), levelfsm.PointRadius, levelfsm.OffsetType);
 		levelfsm.tileDictionary[new Vector3(offset.x, 0f, offset.y)].OccupiedBy = levelfsm.CurrentlySelectedCharacter;
 	}
 
