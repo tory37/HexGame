@@ -160,12 +160,40 @@ public class LevelFSM : MonoFSM
 
         for (int i = 1; i <= movement; i++)
         {
-            List<HexMath.Offset> fringes = HexMath.GetOffsetsInRange(startO, CurrentlySelectedCharacter.Movement, offsetType);
+			fringes = new List<Vector3>();
+			foreach ( var offset in HexMath.GetOffsetsInRange(startO, CurrentlySelectedCharacter.Movement, offsetType) )
+			{
+				Vector3 onTop = FindAboveTile(new Vector3(offset.x, start.y, offset.y));
+				fringes.Add(new Vector3(offset.x, start.y, offset.y));
+			}
 
 
         }
-
     }
+
+	private Vector3 FindAboveTile(Vector3 offsetPosition)
+	{
+		Vector3 tile = offsetPosition;
+		for ( int i = 0; i < CurrentlySelectedCharacter.Height; i++ )
+		{
+			if ( tileDictionary.ContainsKey(offsetPosition + Vector3.up) )
+				offsetPosition += Vector3.up;
+		}
+
+		return tile;
+	}
+
+	private bool IsBlockedByHigherTile(Vector3 offsetPosition)
+	{
+		Vector3 tile = offsetPosition;
+		for ( int i = 0; i < CurrentlySelectedCharacter.Height; i++ )
+		{
+			if ( tileDictionary.ContainsKey(offsetPosition + Vector3.up) )
+				offsetPosition += Vector3.up;
+		}
+
+		return tile;
+	}
 
 	//public Tile FindTileUnderMouse()
 	//{
