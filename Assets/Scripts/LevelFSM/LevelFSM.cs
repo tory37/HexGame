@@ -188,11 +188,13 @@ public class LevelFSM : MonoFSM
 		Vector3 tile = offsetPosition;
 		for ( int i = 0; i < CurrentlySelectedCharacter.Height; i++ )
 		{
-			if ( tileDictionary.ContainsKey(offsetPosition + Vector3.up) )
+			if ( !tileDictionary.ContainsKey( offsetPosition + Vector3.up ) )
+				return true; 
+			else
 				offsetPosition += Vector3.up;
 		}
 
-		return tile;
+		return false;
 	}
 
 	//public Tile FindTileUnderMouse()
