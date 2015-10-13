@@ -33,7 +33,7 @@ public class LevelFSM : MonoFSM
 	/// <summary>
 	/// The dictionary of all tiles whose key is a vector3 defined by offset tile positions (row, vertical height, columns)
 	/// </summary>
-	public Dictionary<Vector3, Tile> tileDictionary { get; private set; }
+	public Dictionary<TDOffset, Tile> tileDictionary { get; private set; }
 
 	public int MaxRows { get; private set; }
 	public int MinRows { get; private set; }
@@ -141,57 +141,95 @@ public class LevelFSM : MonoFSM
 		HexMath.Offset offset = HexMath.OffsetRound(new Vector2(position.x, position.z), pointRadius, offsetType);
 		int height = Mathf.FloorToInt(position.y / tileHeight);
 
-		tileDictionary.TryGetValue(new Vector3(offset.x, height, offset.y), out tileHit);
+		tileDictionary.TryGetValue(new TDOffset(offset.x, height, offset.y), out tileHit);
 
 		return tileHit;
 	}
 
-    public List<Vector3> FindPath(Vector3 start, int movement)
+    //public List<Vector3> FindPath(Vector3 start, int movement)
+    //{
+    //    List<Vector3> openList = new List<Vector3>();
+    //    List<Vector3> closedList = new List<Vector3>();
+
+    //    Vector3 currentTile = start;
+
+    //    HexMath.Offset offStart = HexMath.OffsetRound(new Vector2(currentTile.x, currentTile.z), pointRadius, offsetType);
+
+    //    for (int i = 0; i < 6; i ++)
+    //    {
+    //        int distance = 
+    //    }
+    //}
+
+    private int PathHeuristic(TDOffset start, TDOffset check)
     {
-        HexMath.Offset startO = HexMath.OffsetRound(new Vector2(start.x, start.z), pointRadius, offsetType);
-
-        List<Vector3> vistited = new List<Vector3>();
-        vistited.Add(start);
-
-        List<Vector3> fringes = new List<Vector3>();
-        fringes.Add(start);
-
-        //Func<HexMath.Offset, bool> = (offset) =>  
-
-        for (int i = 1; i <= movement; i++)
-        {
-			fringes = new List<Vector3>();
-			foreach ( var offset in HexMath.GetOffsetsInRange(startO, CurrentlySelectedCharacter.Movement, offsetType) )
-			{
-				Vector3 onTop = FindAboveTile(new Vector3(offset.x, start.y, offset.y));
-				fringes.Add(new Vector3(offset.x, start.y, offset.y));
-			}
-
-
-        }
+        if (check.Height > start.Height)
+            return HexMath.OffsetDistance(new HexMath.Offset(Mathf.RoundToInt(start.Column), Mathf.RoundToInt(start.Row)), new HexMath.Offset(Mathf.RoundToInt(check.Column), Mathf.RoundToInt(check.Row)), offsetType) + (Mathf.RoundToInt(check.Height) - Mathf.RoundToInt(start.Height));
+        else
+            return HexMath.OffsetDistance(new HexMath.Offset(Mathf.RoundToInt(start.Column), Mathf.RoundToInt(start.Row)), new HexMath.Offset(Mathf.RoundToInt(check.Column), Mathf.RoundToInt(check.Row)), offsetType);
     }
 
-	private Vector3 FindAboveTile(Vector3 offsetPosition)
+    // Finds the first tile below the position passed
+    private TDOffset FindValidBelowTile(TDOffset lookPosition)
+    {
+        for (int i = Mathf.RoundToInt(lookPosition.Height); i >= MinHeight; i--)
+        {
+            if (tileDictionary.ContainsKey(lookPosition - new TDOffset(0, i, 0)))
+                return lookPosition - new TDOffset(0, i, 0);
+        }
+
+        return null;
+    }
+
+
+    //private Vector3? FindValidAboveTile(Vector3 lookPosition)
+    //{
+    //    Vector3? tile = null;
+
+    //    for (int i = 1; i <= CurrentlySelectedCharacter.Height; i++)
+    //    {
+    //        if (tileDictionary.ContainsKey(lookPosition + new Vector3(0, i, 0)))
+    //    }
+ 
+    //    if (canReach == true)
+    //    {
+    //        canReach = !BlockedByAboveTile()
+    //    }
+    //}
+
+    private bool BlockedByAboveTile(TDOffset tilePosition)
+    {
+        bool blocked = false;
+
+        for (int i = 1; i <= CurrentlySelectedCharacter.Height; i++)
+        {
+            blocked = tileDictionary.ContainsKey(tilePosition + new TDOffset(0, i, 0));
+        }
+
+        return blocked;
+    }
+
+	private TDOffset FindAboveTile(TDOffset offsetPosition)
 	{
-		Vector3 tile = offsetPosition;
+		TDOffset tile = offsetPosition;
 		for ( int i = 0; i < CurrentlySelectedCharacter.Height; i++ )
 		{
-			if ( tileDictionary.ContainsKey(offsetPosition + Vector3.up) )
-				offsetPosition += Vector3.up;
+			if ( tileDictionary.ContainsKey(offsetPosition + new TDOffset(0, 1, 0)) )
+				offsetPosition += new TDOffset(0, 1, 0);
 		}
 
 		return tile;
 	}
 
-	private bool IsBlockedByHigherTile(Vector3 offsetPosition)
+	private bool IsBlockedByHigherTile(TDOffset offsetPosition)
 	{
-		Vector3 tile = offsetPosition;
+		TDOffset tile = offsetPosition;
 		for ( int i = 0; i < CurrentlySelectedCharacter.Height; i++ )
 		{
-			if ( !tileDictionary.ContainsKey( offsetPosition + Vector3.up ) )
+			if ( !tileDictionary.ContainsKey( offsetPosition + new TDOffset(0, 1, 0 ) ))
 				return true; 
 			else
-				offsetPosition += Vector3.up;
+				offsetPosition += new TDOffset(0, 1, 0);
 		}
 
 		return false;
@@ -217,7 +255,7 @@ public class LevelFSM : MonoFSM
 
 	#region Overrides
 
-		protected override void SetStates()
+	protected override void SetStates()
 	{
 		states = new Dictionary<string, State>
 		{
@@ -246,7 +284,7 @@ public class LevelFSM : MonoFSM
 	/// </summary>
 	private void FillDictionary()
 	{
-		tileDictionary = new Dictionary<Vector3, Tile>();
+		tileDictionary = new Dictionary<TDOffset, Tile>(new TDOffset());
 
 		Component[] tiles = TileMaster.GetComponentsInChildren( typeof( Tile ) );
 
@@ -266,7 +304,7 @@ public class LevelFSM : MonoFSM
 				pos = tile.transform.position;
 				offset = HexMath.OffsetRound(new Vector2(pos.x, pos.z), pointRadius, offsetType);
 				height = Mathf.FloorToInt(pos.y / tileHeight);
-				Vector3 key = new Vector3( offset.x, height, offset.y );
+				TDOffset key = new TDOffset( offset.x, height, offset.y );
 				if ( !tileDictionary.ContainsKey(key) )
 				{
 					tileDictionary.Add(key, tile);
@@ -619,8 +657,71 @@ public class MoveCharacter : State
 
 		// Add the character to the new tile
 		HexMath.Offset offset = HexMath.OffsetRound(new Vector2(currentTarget.x, currentTarget.z), levelfsm.PointRadius, levelfsm.OffsetType);
-		levelfsm.tileDictionary[new Vector3(offset.x, 0f, offset.y)].OccupiedBy = levelfsm.CurrentlySelectedCharacter;
+		levelfsm.tileDictionary[new TDOffset(offset.x, 0, offset.y)].OccupiedBy = levelfsm.CurrentlySelectedCharacter;
 	}
 
 	#endregion
+}
+
+public class TDOffset : IEqualityComparer<TDOffset>
+{
+    public int Column;
+    public int Height;
+    public int Row;
+
+    public TDOffset()
+    {
+        Column = Height = Row = 0;
+    }
+
+    public TDOffset(int column, int height, int row)
+    {
+        this.Column = column;
+        this.Height = height;
+        this.Row = row;
+    }
+
+    public static TDOffset operator +(TDOffset left, TDOffset right)
+    {
+        return new TDOffset(left.Column + right.Column, left.Height + right.Height, left.Row + right.Row);
+    }
+
+    public static TDOffset operator -(TDOffset left, TDOffset right)
+    {
+        return new TDOffset(left.Column - right.Column, left.Height - right.Height, left.Row - right.Row);
+    }
+
+    public override bool Equals(object obj)
+    {
+        TDOffset tdo = obj as TDOffset;
+        if (tdo != null)
+            return Equals(this, tdo);
+        else
+            return false;
+    }
+
+    public static bool operator ==(TDOffset left, TDOffset right)
+    {
+        return left.Equals(left, right);
+    }
+
+    public static bool operator !=(TDOffset left, TDOffset right)
+    {
+        return !left.Equals(left, right);
+    }
+
+    public bool Equals(TDOffset x, TDOffset y)
+    {
+        return x.Column == y.Column && x.Height == y.Height && x.Row == y.Row;
+    }
+
+    public int GetHashCode(TDOffset obj)
+    {
+        int hash = 17;
+        hash = hash * 23 + obj.Column.GetHashCode();
+        hash = hash * 23 + obj.Height.GetHashCode();
+        hash = hash * 23 + obj.Row.GetHashCode();
+
+        return hash;
+    }
 }
