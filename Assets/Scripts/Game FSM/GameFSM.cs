@@ -13,11 +13,11 @@ public class GameFSM : MonoFSM {
 
 	#endregion
 
-	protected override void SetStates()
-	{
-		states = new Dictionary<string,State>
-		{
-			{ "LineDrawingState", new LineDrawingState()}
-		};
-	}
+	//protected override void SetStates()
+	//{
+	//	states = new Dictionary<string,State>
+	//	{
+	//		{ "LineDrawingState", new LineDrawingState()}
+	//	};
+	//}
 }
