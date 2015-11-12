@@ -19,6 +19,9 @@ public abstract class MonoFSM : MonoBehaviour
 	public string StateEnumName;
 
 	[SerializeField, HideInInspector]
+	public bool LockEnumName = false;
+
+	[SerializeField, HideInInspector]
 	public bool IsStatesExpanded = false;
 
 	[SerializeField, HideInInspector]

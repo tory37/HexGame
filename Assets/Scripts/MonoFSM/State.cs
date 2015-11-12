@@ -65,8 +65,5 @@ public abstract class State : MonoBehaviour
 
 public enum TestingEnum
 {
-	One,
-	Two,
-	Three,
-	Four
-}
+
+}  
