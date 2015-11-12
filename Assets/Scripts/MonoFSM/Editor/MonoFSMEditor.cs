@@ -36,25 +36,37 @@ public class MonoFSMEditor : Editor {
 				}
 				EditorGUILayout.EndHorizontal();
 
-				EditorGUILayout.BeginHorizontal();
-				{
-					EditorGUILayout.LabelField( "Enum Key" );
-					EditorGUILayout.LabelField( "State" );
-				}
-				EditorGUILayout.EndHorizontal();
-
 				for ( int i = 0; i < fsm.StateKeys.Count; i++ )
 				{
+					string stateLabel = "EMPTY STATE / NULL";
+
+					if ( fsm.StateValues[i] != null )
+						stateLabel = fsm.StateValues[i].Identifier;
+
+					bool isStateExpanded = true;
 					EditorGUILayout.BeginHorizontal();
 					{
-						if ( GUILayout.Button( "X" ) )
+						if ( fsm.StateValues[i] == null )
+							isStateExpanded = true;
+						else
+						{
+							isStateExpanded = fsm.StateValues[i].IsStateExpanded;
+							fsm.StateValues[i].IsStateExpanded = EditorGUILayout.Foldout( fsm.StateValues[i].IsStateExpanded, stateLabel );
+						}
+						if ( GUILayout.Button( "X", GUILayout.Width(20f), GUILayout.Height(20f) ) )
 						{
 							fsm.StateKeys.RemoveAt( i );
 							fsm.StateValues.RemoveAt( i );
+							i--;
 							continue;
 						}
+					}
+					EditorGUILayout.EndHorizontal();
 
+					if ( isStateExpanded )
+					{
 						fsm.StateKeys[i] = EditorGUILayout.Popup( fsm.StateKeys[i], enumNames );
+
 						State state = (State)EditorGUILayout.ObjectField( fsm.StateValues[i], typeof( State ), true );
 						if ( state != null )
 						{
@@ -72,10 +84,10 @@ public class MonoFSMEditor : Editor {
 						else
 							fsm.StateValues[i] = null;
 					}
-					EditorGUILayout.EndHorizontal();
 				}
+
+				EditorGUI.indentLevel--;
 			}
-			EditorGUI.indentLevel--;
 
 			EditorGUILayout.Space();
 
@@ -107,14 +119,15 @@ public class MonoFSMEditor : Editor {
 					{
 						EditorGUILayout.BeginHorizontal();
 						{
-							if ( GUILayout.Button( "X" ) )
-							{
-								fsm.ValidTransitions.RemoveAt( i );
-								continue;
-							}
-
 							fsm.ValidTransitions[i].From = EditorGUILayout.Popup( fsm.ValidTransitions[i].From, enumNames );
 							fsm.ValidTransitions[i].To = EditorGUILayout.Popup( fsm.ValidTransitions[i].To, enumNames );
+						
+							if ( GUILayout.Button( "X", GUILayout.Width( 20f ), GUILayout.Height( 20f ) ) )
+							{
+								fsm.ValidTransitions.RemoveAt( i );
+								i--;
+								continue;
+							}
 						}
 						EditorGUILayout.EndHorizontal();
 					}
@@ -129,9 +142,16 @@ public class MonoFSMEditor : Editor {
 		}
 
 		EditorGUILayout.Space();
-		EditorGUILayout.Space();
-		EditorGUILayout.Space();
 
-		base.OnInspectorGUI();
+		fsm.IsChildValuesExpanded = EditorGUILayout.Foldout( fsm.IsChildValuesExpanded, "Child Values" );
+
+		if ( fsm.IsChildValuesExpanded )
+		{
+			EditorGUI.indentLevel++;
+
+			base.OnInspectorGUI();
+
+			EditorGUI.indentLevel--;
+		}
 	}
 }

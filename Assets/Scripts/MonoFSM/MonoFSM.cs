@@ -24,6 +24,9 @@ public abstract class MonoFSM : MonoBehaviour
 	[SerializeField, HideInInspector]
 	public bool IsTransitionsExpanded = false;
 
+	[SerializeField, HideInInspector]
+	public bool IsChildValuesExpanded = false;
+
 	public List<int> StateKeys
 	{
 		get { return stateKeys; }
@@ -171,7 +174,7 @@ public abstract class MonoFSM : MonoBehaviour
 	/// </summary>
 	public virtual void AttemptTransition(Enum to)
 	{
-		int fromStateInt = Convert.ToInt16( currentState );
+		int fromStateInt = Convert.ToInt32( states.First(m => m.Value == currentState).Key );
 		int toStateInt = Convert.ToInt32( to );
 
 		if ( states.ContainsKey( toStateInt ) && ContainsTransition( fromStateInt, toStateInt ) )
@@ -189,23 +192,24 @@ public abstract class MonoFSM : MonoBehaviour
 public class FSMTransition : IEquatable<FSMTransition>
 {
 	public int From 
-	{ 
-		get; 
+	{
+		get { return from; }
 #if UNITY_EDITOR
-		set;
-#else 
-		private set;
+		set { from = value; }
 #endif
 	}
+	[SerializeField]
+	private int from;
+
 	public int To 
-	{ 
-		get; 
+	{
+		get { return to; } 
 #if UNITY_EDITOR
-		set;
-#else 
-		private set;
+		set { to = value; }
 #endif
 	}
+	[SerializeField]
+	private int to;
 
 	public FSMTransition(int from, int to)
 	{

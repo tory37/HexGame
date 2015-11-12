@@ -6,6 +6,13 @@ using System.Collections;
 /// </summary>
 public abstract class State : MonoBehaviour
 {
+	#region FSM Inspector Variables
+
+	[SerializeField, HideInInspector]
+	public bool IsStateExpanded = false;
+
+	#endregion
+
 	public string Identifier
 	{
 		get { return identifier; }
@@ -54,4 +61,12 @@ public abstract class State : MonoBehaviour
 	/// this is where you put your if else statements for transtioning
 	/// </summary>
     public virtual void CheckTransitions() { }
+}
+
+public enum TestingEnum
+{
+	One,
+	Two,
+	Three,
+	Four
 }
