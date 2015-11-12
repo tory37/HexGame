@@ -58,8 +58,6 @@ public class MonoFSMInspector : Editor {
 						bool isStateExpanded = true;
 						EditorGUILayout.BeginHorizontal();
 						{
-							EditorGUILayout.BeginVertical();
-							{
 								if ( fsm.StateValues[i] == null )
 									isStateExpanded = true;
 								else
@@ -68,46 +66,8 @@ public class MonoFSMInspector : Editor {
 									fsm.StateValues[i].IsStateExpanded = EditorGUILayout.Foldout( fsm.StateValues[i].IsStateExpanded, stateLabel );
 								}
 
-								if ( isStateExpanded )
-								{
-									EditorGUILayout.LabelField( "State Enum", GUILayout.Width( 90 ));
-									EditorGUILayout.LabelField( "State", GUILayout.Width( 90 ) );
+								GUILayout.FlexibleSpace();
 
-									EditorGUILayout.EndVertical();
-
-									EditorGUILayout.BeginVertical();
-
-									EditorGUILayout.LabelField( "" );
-
-									if ( fsm.StateKeys[i] > enumNames.Length )
-										fsm.StateKeys[i] = 1;
-
-									fsm.StateKeys[i] = EditorGUILayout.Popup( fsm.StateKeys[i], enumNames );
-
-									State state = (State)EditorGUILayout.ObjectField( fsm.StateValues[i], typeof( State ), true );
-									if ( state != null )
-									{
-										Type stateType = state.GetType();
-										bool contains = false;
-										for ( int j = 0; j < fsm.StateValues.Count; j++ )
-										{
-											if ( i != j && fsm.StateValues[j] != null )
-												if ( fsm.StateValues[j].GetType() == stateType )
-													contains = true;
-										}
-										if ( contains == false )
-											fsm.StateValues[i] = state;
-									}
-									else
-										fsm.StateValues[i] = null;
-								}
-							}
-							EditorGUILayout.EndVertical();
-
-							GUILayout.FlexibleSpace();
-
-							EditorGUILayout.BeginVertical();
-							{
 								if ( GUILayout.Button( "Up", GUILayout.Width( 50f ), GUILayout.Height( 15f ) ) )
 								{
 									if ( i > 0 )
@@ -136,15 +96,53 @@ public class MonoFSMInspector : Editor {
 										fsm.StateValues[i + 1] = tempState;
 									}
 								}
-							}
-							EditorGUILayout.EndVertical();
 
-							if ( GUILayout.Button( "X", GUILayout.Width( 30f ), GUILayout.Height( 30f ) ) )
+							if ( GUILayout.Button( "X", GUILayout.Width( 20f ), GUILayout.Height( 20f ) ) )
 							{
 								fsm.StateKeys.RemoveAt( i );
 								fsm.StateValues.RemoveAt( i );
 								i--;
 								continue;
+							}
+						}
+						EditorGUILayout.EndHorizontal();
+
+						EditorGUILayout.BeginHorizontal();
+						{
+							if ( isStateExpanded )
+							{
+								EditorGUILayout.BeginVertical();
+								{
+									EditorGUILayout.LabelField( "State Enum", GUILayout.Width( 90 ) );
+									EditorGUILayout.LabelField( "State", GUILayout.Width( 90 ) );
+								}
+								EditorGUILayout.EndVertical();
+
+								EditorGUILayout.BeginVertical();
+								{
+									if ( fsm.StateKeys[i] > enumNames.Length )
+										fsm.StateKeys[i] = 1;
+
+									fsm.StateKeys[i] = EditorGUILayout.Popup( fsm.StateKeys[i], enumNames );
+
+									State state = (State)EditorGUILayout.ObjectField( fsm.StateValues[i], typeof( State ), true );
+									if ( state != null )
+									{
+										Type stateType = state.GetType();
+										bool contains = false;
+										for ( int j = 0; j < fsm.StateValues.Count; j++ )
+										{
+											if ( i != j && fsm.StateValues[j] != null )
+												if ( fsm.StateValues[j].GetType() == stateType )
+													contains = true;
+										}
+										if ( contains == false )
+											fsm.StateValues[i] = state;
+									}
+									else
+										fsm.StateValues[i] = null;
+								}
+								EditorGUILayout.EndVertical();
 							}
 						}
 						EditorGUILayout.EndHorizontal();
